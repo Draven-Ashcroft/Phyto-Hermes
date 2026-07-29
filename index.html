@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chemotropism — The Observation Experiment</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0e0f12;
+    color: #fff;
+    font-family: Roboto, "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 32px 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 960px; }
+  .app-header { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 20px; }
+  .app-icon-wrap {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle, rgba(255,180,90,0.32), rgba(255,180,90,0) 72%);
+    box-shadow: 0 0 24px 7px rgba(255,170,80,0.4);
+  }
+  .app-title { font-size: 23px; font-weight: 700; letter-spacing: 0.02em; margin: 0; color: #fff; text-transform: uppercase; }
+  .subtitle { color: rgba(255,255,255,0.5); font-size: 13px; margin: 0 0 16px 0; text-align: center; }
+  .panel {
+    border: 1px solid rgba(255,255,255,0.1);
+    background: #131519;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  }
+  svg { width: 100%; height: auto; display: block; }
+  .controls {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    margin-top: 14px; padding: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: #131519; border-radius: 12px;
+  }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.85); cursor: pointer; transition: background 150ms ease, transform 150ms ease;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.12); }
+  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn.active { background: rgba(255,180,90,0.22); border-color: rgba(255,180,90,0.55); color: #ffcf8f; }
+  .mini-icon { width: 18px !important; height: 18px !important; flex-shrink: 0; }
+  .icon-btn.pulse { animation: pulse-ring 650ms ease-out; }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(255,180,90,0.5); }
+    100% { box-shadow: 0 0 0 12px rgba(255,180,90,0); }
+  }
+  .slider-row { display: flex; align-items: center; gap: 10px; flex: 1 1 220px; min-width: 200px; }
+  .slider-row input[type="range"] { flex: 1; accent-color: #ffb454; }
+  .slider-row .readout { font-size: 13px; color: rgba(255,255,255,0.8); white-space: nowrap; min-width: 64px; text-align: right; }
+  .stat-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+  .stat-card {
+    flex: 1; min-width: 260px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: #131519; border-radius: 12px; padding: 12px 14px;
+    border-left: 3px solid var(--accent, rgba(255,255,255,0.3));
+  }
+  .stat-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.4); margin: 0 0 4px; }
+  .stat-card p { font-size: 13px; color: rgba(255,255,255,0.9); line-height: 1.4; margin: 0; }
+  .info-card {
+    border: 1px solid rgba(255,255,255,0.1);
+    background: #131519;
+    border-radius: 18px;
+    margin-top: 12px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .info-card-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.85);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 14px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 150ms ease;
+  }
+  .info-card-header:hover { background: rgba(255,255,255,0.04); }
+  .info-card-header:focus-visible { outline: 2px solid rgba(255,180,90,0.7); outline-offset: -2px; }
+  .info-card-arrow { transition: transform 350ms ease-in-out; }
+  .info-card[data-expanded="true"] .info-card-arrow { transform: rotate(180deg); }
+  .info-card-panel {
+    display: grid; grid-template-rows: 0fr; opacity: 0;
+    transition: grid-template-rows 350ms ease-in-out, opacity 350ms ease-in-out;
+  }
+  .info-card[data-expanded="true"] .info-card-panel { grid-template-rows: 1fr; opacity: 1; }
+  .info-card-panel-inner { overflow: hidden; }
+  .info-card-body { padding: 0 16px 16px; font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.55; }
+  .info-card-body p { margin: 0 0 8px; }
+  .info-card-body p:last-child { margin-bottom: 0; }
+  .info-card-body strong { color: rgba(255,255,255,0.85); font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) {
+    .info-card-arrow, .info-card-panel, .info-card-header, #magnifier, #magLeaderLine, #controlEndMarker, #controlEndCallout { transition: none; }
+  }
+  #magnifier { transition: opacity .3s ease; cursor: grab; touch-action: none; }
+  #magnifier.dragging { cursor: grabbing; }
+  #magLeaderLine { transition: opacity .35s ease; }
+  #controlEndMarker { transition: opacity .3s ease; }
+  #controlEndMarker:hover circle { fill: rgba(160,108,213,0.32); }
+  #controlEndCallout { transition: opacity .25s ease; }
+
+  /* Germinate button — disabled until pollen has landed */
+  .icon-btn:disabled { opacity: 0.32; cursor: not-allowed; pointer-events: none; }
+  /* Chemical release button active glow */
+  .icon-btn.chem-active { background: rgba(60,220,100,0.18); border-color: rgba(60,220,100,0.55); color: #5eff9a; }
+  .icon-btn.chem-active:hover { background: rgba(60,220,100,0.28); }
+  .icon-btn.germ-ready { animation: germ-pulse 1.4s ease-in-out infinite; }
+  @keyframes germ-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(140,220,100,0.55); border-color: rgba(140,220,100,0.4); }
+    50%       { box-shadow: 0 0 0 8px rgba(140,220,100,0);  border-color: rgba(140,220,100,0.7); }
+  }
+
+  /* Detected-ovule flash on the stat card */
+  @keyframes detect-flash {
+    0%   { border-left-color: #3be87a; box-shadow: 0 0 0 0 rgba(59,232,122,0.55); }
+    40%  { border-left-color: #3be87a; box-shadow: 0 0 0 10px rgba(59,232,122,0); }
+    100% { border-left-color: #ffb454; box-shadow: none; }
+  }
+  .stat-card.ovule-detected { animation: detect-flash 1.6s ease-out forwards; }
+  .detected-badge {
+    display: inline-block; margin-top: 5px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    color: #3be87a; background: rgba(59,232,122,0.12);
+    border: 1px solid rgba(59,232,122,0.35); border-radius: 6px;
+    padding: 2px 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="app-header">
+    <div class="app-icon-wrap">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <path d="M13 4 C13 4 8 9 8 14 C8 18 10 21 13 21 C16 21 18 18 18 14 C18 9 13 4 13 4 Z" stroke="#ffcf8f" stroke-width="1.8" fill="none"/>
+      </svg>
+    </div>
+    <div>
+      <h2 class="app-title">Phyto - Hermes</h2>
+    </div>
+  </div>
+  <p class="subtitle">Chemotropism Simulator</p>
+
+  <div class="panel">
+    <svg id="sceneSvg" viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bgGlow" cx="50%" cy="20%" r="80%">
+          <stop offset="0%" stop-color="rgba(255,180,90,0.05)"></stop>
+          <stop offset="100%" stop-color="rgba(255,180,90,0)"></stop>
+        </radialGradient>
+        <linearGradient id="stigmaGrad" x1="0.15" y1="0" x2="0.85" y2="1">
+          <stop offset="0%" stop-color="#eda2b0"></stop>
+          <stop offset="55%" stop-color="#d9758c"></stop>
+          <stop offset="100%" stop-color="#b8546b"></stop>
+        </linearGradient>
+        <linearGradient id="styleGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#5f8a4a"></stop>
+          <stop offset="42%" stop-color="#9ac37f"></stop>
+          <stop offset="58%" stop-color="#9ac37f"></stop>
+          <stop offset="100%" stop-color="#4d7038"></stop>
+        </linearGradient>
+        <radialGradient id="ovaryGradRadial" cx="38%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#6f9c58"></stop>
+          <stop offset="55%" stop-color="#436b34"></stop>
+          <stop offset="100%" stop-color="#2c4623"></stop>
+        </radialGradient>
+        <radialGradient id="attractantGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,200,60,0.65)"></stop>
+          <stop offset="60%" stop-color="rgba(255,180,50,0.28)"></stop>
+          <stop offset="100%" stop-color="rgba(255,180,50,0)"></stop>
+        </radialGradient>
+        <radialGradient id="petalGrad" cx="50%" cy="92%" r="90%">
+          <stop offset="0%" stop-color="#f3d9df"></stop>
+          <stop offset="45%" stop-color="#dd8aa0"></stop>
+          <stop offset="100%" stop-color="#a94f68"></stop>
+        </radialGradient>
+        <radialGradient id="antherGrad" cx="35%" cy="30%" r="80%">
+          <stop offset="0%" stop-color="#ffe08a"></stop>
+          <stop offset="60%" stop-color="#e0a83a"></stop>
+          <stop offset="100%" stop-color="#a97418"></stop>
+        </radialGradient>
+        <radialGradient id="grainGrad" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#fff0b8"></stop>
+          <stop offset="100%" stop-color="#e0a83a"></stop>
+        </radialGradient>
+        <linearGradient id="filamentGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#5f8a4a"></stop>
+          <stop offset="50%" stop-color="#a2cc86"></stop>
+          <stop offset="100%" stop-color="#5f8a4a"></stop>
+        </linearGradient>
+        <!-- Embryo sac gradient -->
+        <radialGradient id="embryoSacGrad" cx="50%" cy="40%" r="70%">
+          <stop offset="0%" stop-color="#4a7a38"></stop>
+          <stop offset="100%" stop-color="#1e3516"></stop>
+        </radialGradient>
+        <!-- Chemoattractant gradient emanating from synergids -->
+        <radialGradient id="chemoGradient" cx="55%" cy="62%" r="55%">
+          <stop offset="0%" stop-color="rgba(255,220,80,0.38)" id="chemoStop0"></stop>
+          <stop offset="40%" stop-color="rgba(255,190,50,0.18)" id="chemoStop1"></stop>
+          <stop offset="100%" stop-color="rgba(255,180,50,0)" id="chemoStop2"></stop>
+        </radialGradient>
+        <!-- Egg cell gradient -->
+        <radialGradient id="eggGrad" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#b8e0ff"></stop>
+          <stop offset="60%" stop-color="#6aaad4"></stop>
+          <stop offset="100%" stop-color="#3a6e96"></stop>
+        </radialGradient>
+        <!-- Synergid gradient -->
+        <radialGradient id="synergidGrad" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#ffe8a0"></stop>
+          <stop offset="60%" stop-color="#e8c060"></stop>
+          <stop offset="100%" stop-color="#b08020"></stop>
+        </radialGradient>
+        <!-- Central cell gradient -->
+        <radialGradient id="centralCellGrad" cx="40%" cy="35%" r="70%">
+          <stop offset="0%" stop-color="#c4f0c0"></stop>
+          <stop offset="100%" stop-color="#4a8c48"></stop>
+        </radialGradient>
+        <!-- Guided tube gradient -->
+        <linearGradient id="tubGradGuided" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#e8d9a8"></stop>
+          <stop offset="100%" stop-color="#ffe0b0"></stop>
+        </linearGradient>
+        <!-- Control tube gradient -->
+        <linearGradient id="tubeGradControl" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#aab8c2"></stop>
+          <stop offset="100%" stop-color="#c8d4da"></stop>
+        </linearGradient>
+        <clipPath id="lensClip"><circle cx="0" cy="0" r="156"></circle></clipPath>
+        <!-- Pollen germination glow -->
+        <radialGradient id="germGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,240,180,0.8)"></stop>
+          <stop offset="100%" stop-color="rgba(255,200,80,0)"></stop>
+        </radialGradient>
+      </defs>
+
+      <rect x="0" y="0" width="900" height="520" fill="url(#bgGlow)"></rect>
+
+      <g id="leftFlower"></g>
+      <g id="rightPistil"></g>
+      <!-- Right pistil internal anatomy (drawn after pistil so it overlaps) -->
+      <g id="rightOvaryAnatomy"></g>
+      <!-- The two growing tubes (control first so guided draws on top) -->
+      <g id="controlTubeLayer"></g>
+      <g id="guidedTubeLayer"></g>
+      <!-- Expanding wave rings from the guided tube tip -->
+      <g id="tubeWaves"></g>
+      <!-- Chemical signal particles drifting up through the style -->
+      <g id="chemParticles"></g>
+      <!-- Male gamete (sperm cell) particles, released into the embryo sac once fertilised -->
+      <g id="gameteParticles"></g>
+      <!-- Pollen grain on stigma after landing -->
+      <g id="stigmaGrain"></g>
+
+      <g id="windStreaks"></g>
+      <path id="pollenTrail" fill="none" stroke="rgba(255,225,150,0.7)" stroke-width="1.6" stroke-dasharray="4 5" stroke-linecap="round"></path>
+      <g id="pollenTravel"></g>
+
+      <!-- Tube labels -->
+      <g id="tubeLabels" opacity="0">
+        <rect x="580" y="130" width="106" height="18" rx="5" fill="rgba(0,0,0,0.55)"></rect>
+        <circle cx="590" cy="139" r="4" fill="#f0923e"></circle>
+        <text x="637" y="143" text-anchor="middle" font-size="10" fill="#f0923e" font-weight="600">Guided tube</text>
+        <rect x="692" y="130" width="106" height="18" rx="5" fill="rgba(0,0,0,0.55)"></rect>
+        <circle cx="702" cy="139" r="4" fill="#a06cd5"></circle>
+        <text x="749" y="143" text-anchor="middle" font-size="10" fill="#c295e8" font-weight="600">Control tube</text>
+      </g>
+
+      <!-- Clickable marker at the control tube's end, with a toggled info callout -->
+      <g id="controlEndMarker" opacity="0" style="cursor:pointer;">
+        <circle r="9" fill="rgba(160,108,213,0.18)" stroke="#a06cd5" stroke-width="1.4"></circle>
+        <text y="3.5" text-anchor="middle" font-size="10" font-weight="700" fill="#c295e8">?</text>
+      </g>
+      <g id="controlEndCallout" opacity="0" style="pointer-events:none;">
+        <rect x="-108" y="-40" width="216" height="28" rx="8" fill="rgba(10,11,14,0.92)" stroke="rgba(160,108,213,0.5)" stroke-width="1"></rect>
+        <text x="0" y="-21" text-anchor="middle" font-size="11" font-weight="600" fill="#c295e8">No chemicals to guide for fertilisation</text>
+      </g>
+
+      <text x="240" y="495" text-anchor="middle" font-size="13" font-weight="600" fill="white">Left Flower</text>
+      <text x="240" y="511" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.5)">(Stamen — pollen source)</text>
+      <text x="660" y="495" text-anchor="middle" font-size="13" font-weight="600" fill="white">Right Flower</text>
+      <text x="660" y="511" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.5)">(Pistil — stigma to ovule)</text>
+
+      <line id="magLeaderLine" stroke="rgba(255,215,150,0.55)" stroke-width="1.6" stroke-dasharray="5 4" stroke-linecap="round" opacity="0"></line>
+      <g id="magnifier" opacity="0" style="display:none;">
+        <line x1="114" y1="114" x2="209" y2="209" stroke="#c9c9c9" stroke-width="11" stroke-linecap="round"></line>
+        <line x1="114" y1="114" x2="209" y2="209" stroke="rgba(0,0,0,0.35)" stroke-width="11" stroke-linecap="round" transform="translate(0,2)"></line>
+        <g id="magBody">
+          <circle r="156" fill="#171a1f"></circle>
+          <g clip-path="url(#lensClip)">
+            <g id="magContent">
+              <!-- Embryo sac background -->
+              <ellipse id="magEmbryoSac" cx="0" cy="10" rx="95" ry="120" fill="url(#embryoSacGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"></ellipse>
+              <!-- Outer integuments -->
+              <ellipse cx="0" cy="10" rx="118" ry="143" fill="none" stroke="rgba(150,200,120,0.3)" stroke-width="3"></ellipse>
+              <ellipse cx="0" cy="10" rx="107" ry="132" fill="none" stroke="rgba(150,200,120,0.2)" stroke-width="2"></ellipse>
+              <!-- Central cell (large, fills most of embryo sac) -->
+              <ellipse id="magCentralCell" cx="0" cy="20" rx="70" ry="88" fill="url(#centralCellGrad)" opacity="0.25" stroke="rgba(180,240,180,0.2)" stroke-width="1"></ellipse>
+              <!-- Polar nuclei (two overlapping circles in center) -->
+              <circle id="magPolarN1" cx="-10" cy="22" r="11" fill="rgba(200,255,200,0.45)" stroke="rgba(180,240,160,0.5)" stroke-width="1"></circle>
+              <circle id="magPolarN2" cx="10" cy="28" r="11" fill="rgba(200,255,200,0.45)" stroke="rgba(180,240,160,0.5)" stroke-width="1"></circle>
+              <!-- Synergid cells (beside egg at micropyle end — bottom of sac) -->
+              <g id="magSynergids">
+                <!-- Left synergid -->
+                <ellipse cx="-26" cy="90" rx="19" ry="26" fill="url(#synergidGrad)" opacity="0.85" stroke="rgba(255,220,100,0.6)" stroke-width="1.2"></ellipse>
+                <circle cx="-26" cy="82" r="5.5" fill="rgba(255,180,60,0.7)" stroke="rgba(200,140,20,0.5)" stroke-width="0.8"></circle>
+                <!-- Right synergid -->
+                <ellipse cx="26" cy="90" rx="19" ry="26" fill="url(#synergidGrad)" opacity="0.85" stroke="rgba(255,220,100,0.6)" stroke-width="1.2"></ellipse>
+                <circle cx="26" cy="82" r="5.5" fill="rgba(255,180,60,0.7)" stroke="rgba(200,140,20,0.5)" stroke-width="0.8"></circle>
+                <!-- Filiform apparatus (fibrous projections at top of each synergid) -->
+                <path d="M -26 65 L -20 58 M -26 65 L -26 56 M -26 65 L -32 58" stroke="rgba(255,210,80,0.55)" stroke-width="1.2" stroke-linecap="round" fill="none"></path>
+                <path d="M 26 65 L 20 58 M 26 65 L 26 56 M 26 65 L 32 58" stroke="rgba(255,210,80,0.55)" stroke-width="1.2" stroke-linecap="round" fill="none"></path>
+              </g>
+              <!-- Egg cell (between synergids, slightly below) -->
+              <ellipse id="magEggCell" cx="0" cy="98" rx="22" ry="28" fill="url(#eggGrad)" opacity="0.9" stroke="rgba(150,200,255,0.6)" stroke-width="1.4"></ellipse>
+              <circle id="magEggNucleus" cx="0" cy="93" r="7" fill="rgba(200,235,255,0.65)" stroke="rgba(120,180,230,0.5)" stroke-width="0.8"></circle>
+              <!-- Antipodal cells (opposite end from micropyle, top of diagram) -->
+              <ellipse cx="-18" cy="-90" rx="14" ry="18" fill="rgba(180,220,160,0.4)" stroke="rgba(150,200,120,0.3)" stroke-width="1"></ellipse>
+              <ellipse cx="0" cy="-100" rx="14" ry="18" fill="rgba(180,220,160,0.4)" stroke="rgba(150,200,120,0.3)" stroke-width="1"></ellipse>
+              <ellipse cx="18" cy="-90" rx="14" ry="18" fill="rgba(180,220,160,0.4)" stroke="rgba(150,200,120,0.3)" stroke-width="1"></ellipse>
+              <!-- Micropyle opening label -->
+              <text x="0" y="128" text-anchor="middle" font-size="8" fill="rgba(255,210,80,0.7)" font-style="italic">micropyle</text>
+              <!-- Chemoattractant zone -->
+              <ellipse id="magRedZone" cx="0" cy="0" rx="0" ry="0" fill="url(#attractantGlow)"></ellipse>
+              <!-- Floating chemoattractant particles -->
+              <g id="magParticles"></g>
+              <!-- Pollen tube path inside magnifier -->
+              <path id="magTubeTip" d="" fill="none" stroke="#f0923e" stroke-width="6" stroke-linecap="round"></path>
+              <!-- Tube tip nucleus (vegetative nucleus) -->
+              <circle id="magTubeNucleus" r="3.2" fill="#c9a6e0" opacity="0"></circle>
+              <!-- Sperm cells just behind the tip -->
+              <circle id="magSperm1" r="2.4" fill="#e0c0ff" opacity="0"></circle>
+              <circle id="magSperm2" r="2.4" fill="#e0c0ff" opacity="0"></circle>
+            </g>
+          </g>
+          <circle r="156" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="4"></circle>
+          <circle r="156" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="1" transform="translate(1.2,1.2)"></circle>
+        </g>
+        <g id="magLabel" transform="translate(0,-176)">
+          <rect x="-74" y="-14" width="148" height="24" rx="12" fill="rgba(10,11,14,0.85)" stroke="rgba(255,255,255,0.15)"></rect>
+          <text id="magLabelText" x="0" y="3" text-anchor="middle" font-size="11" font-weight="600" fill="#ffe3b0"></text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <button class="icon-btn" id="pollinateBtn" title="Release Pollen Grain — drifts onto the stigma">
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="22"></line><line x1="4.2" y1="4.2" x2="6.3" y2="6.3"></line><line x1="17.7" y1="17.7" x2="19.8" y2="19.8"></line><line x1="2" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="22" y2="12"></line><line x1="4.2" y1="19.8" x2="6.3" y2="17.7"></line><line x1="17.7" y1="6.3" x2="19.8" y2="4.2"></line></svg>
+    </button>
+    <button class="icon-btn" id="germinateBtn" title="Initiate Germination — activates pollen tube growth" disabled>
+      <!-- Seedling/sprout icon -->
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22V12"></path>
+        <path d="M12 12C12 12 8 10 8 6a4 4 0 0 1 8 0c0 4-4 6-4 6z"></path>
+        <path d="M12 12C12 12 15.5 9.5 18 11s1 5-2 5c-2 0-4-2-4-4z"></path>
+      </svg>
+    </button>
+    <button class="icon-btn" id="releaseChemBtn" title="Release chemical signal — LURE particles drift up through the style">
+      <!-- Droplet / chemical release icon -->
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C12 2 5 10 5 15a7 7 0 0 0 14 0C19 10 12 2 12 2z"></path>
+        <path d="M9 15 Q12 12 15 15"></path>
+      </svg>
+    </button>
+    <button class="icon-btn" id="magBtn" title="Show Magnifier">
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    </button>
+    <button class="icon-btn" id="playBtn" title="Play">
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+    </button>
+    <button class="icon-btn" id="resetBtn" title="Reset">
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"></path><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+    </button>
+    <button class="icon-btn" id="magScaleDownBtn" title="Smaller Magnifier">
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+    </button>
+    <button class="icon-btn" id="magScaleUpBtn" title="Larger Magnifier">
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="8" y1="11" x2="14" y2="11"></line><line x1="11" y1="8" x2="11" y2="14"></line></svg>
+    </button>
+    <div class="slider-row">
+      <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <input type="range" id="hoursSlider" min="0" max="250" value="0" step="0.5" />
+      <span class="readout" id="hoursReadout">t = 0h</span>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card" style="--accent:#8a8f98;">
+      <p class="label">Control — Unguided Tube</p>
+      <p id="controlStat">Pollen tube grows with no directional guidance — straight down.</p>
+    </div>
+    <div class="stat-card" id="expCard" style="--accent:#ffb454;">
+      <p class="label">Experimental — Chemotropic Guidance</p>
+      <p id="experimentalStat">Not yet responding.</p>
+    </div>
+  </div>
+
+  <div class="info-card" id="mechanismCard" data-expanded="false">
+    <button class="info-card-header" id="mechanismCardToggle" aria-expanded="false" aria-controls="mechanismCardContent">
+      <span class="info-card-title">Mechanism</span>
+      <svg class="mini-icon info-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+    </button>
+    <div class="info-card-panel">
+      <div class="info-card-panel-inner">
+        <div class="info-card-body" id="mechanismCardContent" role="region" aria-labelledby="mechanismCardToggle">
+          <p><strong>Positive Chemotropism</strong></p>
+          <p>After a pollen grain germinates on the stigma, its tube grows down through the style's transmitting tissue. <strong>Synergid cells</strong> flanking the egg cell release chemoattractant molecules — including LURE peptides and a calcium (Ca²⁺) gradient — that form a concentration gradient highest near the <strong>micropyle</strong>.</p>
+          <p>The pollen tube senses this gradient via receptor-like kinases and bends toward the source, ensuring the two male gametes (sperm cells) reach the embryo sac for <strong>double fertilization</strong> — one sperm fusing with the egg to form the embryo, the other with the polar nuclei to form endosperm.</p>
+          <p>The <strong>control tube</strong> (purple) grows straight through the style with no chemical guidance and exits the ovary without reaching the micropyle. The <strong>guided tube</strong> (orange) curves progressively as the attractant gradient steepens inside the ovary.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-card" id="gameteCard" data-expanded="false" style="display:none;">
+    <button class="info-card-header" id="gameteCardToggle" aria-expanded="false" aria-controls="gameteCardContent">
+      <span class="info-card-title">🟣 Male Gametes Delivered — click the two dots in the ovule</span>
+      <svg class="mini-icon info-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+    </button>
+    <div class="info-card-panel">
+      <div class="info-card-panel-inner">
+        <div class="info-card-body" id="gameteCardContent" role="region" aria-labelledby="gameteCardToggle">
+          <p><strong>Double Fertilization</strong></p>
+          <p>The pollen tube tip ruptures inside a synergid, releasing its two non-motile <strong>sperm cells</strong> — the male gametes — right beside the egg apparatus.</p>
+          <p>One sperm fuses with the <strong>egg cell</strong> (n + n) to form the diploid <strong>zygote</strong>, the future embryo.</p>
+          <p>The other fuses with the two <strong>polar nuclei</strong> (n + n + n) to form the triploid <strong>primary endosperm nucleus</strong>, which develops into nutritive endosperm tissue.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   GEOMETRY CONSTANTS
+========================================================================= */
+const leftX = 240, rightX = 660;
+const STIGMA_TOP_Y = 40, STIGMA_H = 50;
+// Matches stigmaGrainMarkup's grainY (stigma cap center minus 6), plus 5 to
+// land on the grain's bottom edge — tubes should emerge below the grain, not above it.
+const TUBE_ORIGIN_Y = STIGMA_TOP_Y + STIGMA_H * 0.35 - 6 + 5;
+const STYLE_TOP_Y = STIGMA_TOP_Y + STIGMA_H, STYLE_H = 220, STYLE_W = 34;
+const OVARY_TOP_Y = STYLE_TOP_Y + STYLE_H, OVARY_H = 130, OVARY_W = 92;
+
+// Guided tube curves toward the micropyle (offset from center — tubes enter slightly off-center)
+const GUIDED_START_X   = rightX - 10;  // guided tube starts left of center so guidance curve is visible
+const CONTROL_START_X  = rightX + 12;  // control starts right of center so it visibly misses the centred micropyle
+const MICROPYLE_OFFSET_X = 0;          // ovule centred on the pistil axis
+const MICROPYLE_Y = OVARY_TOP_Y + OVARY_H * 0.62;
+const MICROPYLE_X = rightX + MICROPYLE_OFFSET_X;   // = rightX
+
+const MAX_HOURS = 250;
+const TUBE_RATE = 8.6; // px/hour — guided tube reaches micropyle ~h45
+
+const state = { hours: 0, playing: false, magnifierOn: false, pollinated: false, germinated: false, ovuleDetected: false, chemRelease: false, fertilized: false };
+let playAnimId = null, playStart = 0, startHours = 0;
+let controlCalloutOpen = false; // toggled by clicking the "?" marker at the control tube's end
+
+/* =========================================================================
+   TUBE PATH
+   The guided tube dips past the micropyle to one side, then hooks back
+   in a U-turn and enters the micropyle from below — moving upward through
+   the same central channel (rightX) that chemoattractant particles rise
+   through toward the stigma. This mirrors anatropous ovule anatomy, where
+   the micropyle faces back toward the style rather than straight down.
+   The control tube grows straight down, missing the micropyle entirely.
+
+   Both tubes elongate at the same rate regardless of the chemical signal —
+   a pollen tube's growth through the style is driven by its own reserves
+   and the stylar transmitting tissue, not by any ovule-derived cue. Only
+   the guided tube receives directional guidance once it nears the ovary;
+   the control tube never does, so it grows the same distance but keeps
+   going straight and misses the micropyle.
+========================================================================= */
+
+// --- Ovule geometry, mirrored from ovaryAnatomyMarkup() so the U-turn can
+// be routed against the *actual* drawn shapes rather than guessed offsets.
+const OVARY_LEFT_X   = rightX - OVARY_W / 2;
+const OVARY_RIGHT_X  = rightX + OVARY_W / 2;
+const OVARY_BOTTOM_Y = OVARY_TOP_Y + OVARY_H;
+const SAC_RX = OVARY_W * 0.32, SAC_RY = OVARY_H * 0.39;
+const SAC_CY = OVARY_TOP_Y + OVARY_H * 0.52;
+// Integument outline drawn at INTEG_RX/INTEG_RY, both consumed directly by
+// ovaryAnatomyMarkup() rather than recomputed there
+const INTEG_RX = SAC_RX + 10, INTEG_RY = SAC_RY + 12;
+// Egg / synergid cluster footprint (see ovaryAnatomyMarkup): synergids at
+// microX±11 (rx 9) around synCy = MICROPYLE_Y-12 (ry 13); egg at microX
+// (rx 10) around eggCy = MICROPYLE_Y+8 (ry 13). The lowest point of the
+// cluster — the thing the old hook cut through — is the egg's bottom edge.
+const CLUSTER_BOTTOM_Y = (MICROPYLE_Y + 8) + 13;
+
+// Ovary wall x at a given y, on the given side (-1 left, +1 right). The
+// wall is the same quadratic Bezier pistilMarkup() draws, so this traces
+// the real silhouette instead of a straight-line approximation.
+function ovaryWallX(y, side) {
+  const P0y = OVARY_TOP_Y, P2y = OVARY_BOTTOM_Y;
+  const P0x = side < 0 ? OVARY_LEFT_X       : OVARY_RIGHT_X;
+  const P1x = side < 0 ? OVARY_LEFT_X - 14  : OVARY_RIGHT_X + 14;
+  const P2x = side < 0 ? OVARY_LEFT_X + 6   : OVARY_RIGHT_X - 6;
+  const yc = Math.min(Math.max(y, P0y), P2y);
+  let lo = 0, hi = 1;
+  for (let i = 0; i < 24; i++) {
+    const mid = (lo + hi) / 2;
+    const my = (1 - mid) * (1 - mid) * P0y + 2 * (1 - mid) * mid * ((P0y + P2y) / 2) + mid * mid * P2y;
+    if (my < yc) lo = mid; else hi = mid;
+  }
+  const t = (lo + hi) / 2, mt = 1 - t;
+  return mt * mt * P0x + 2 * mt * t * P1x + t * t * P2x;
+}
+
+// Integument's half-width at a given y (0 outside its vertical extent).
+function integumentHalfWidth(y) {
+  const dy = y - SAC_CY;
+  if (Math.abs(dy) >= INTEG_RY) return 0;
+  return INTEG_RX * Math.sqrt(1 - (dy / INTEG_RY) * (dy / INTEG_RY));
+}
+
+// A safe x to route the tube through on its way down the left side of the
+// ovule: just outside the integument, but pulled back off the ovary wall
+// if the gap between them is tight. Genuinely clears both silhouettes
+// (with a small margin) rather than a fixed offset.
+const CLEARANCE_MARGIN = 3;
+function leftChannelX(y) {
+  const wallX = ovaryWallX(y, -1);
+  const integBoundary = rightX - integumentHalfWidth(y);
+  const preferred = integBoundary - CLEARANCE_MARGIN;
+  const wallLimit = wallX + CLEARANCE_MARGIN;
+  return preferred > wallLimit ? preferred : (wallX + integBoundary) / 2;
+}
+
+// Depth (y) at which the tube cuts back toward the micropyle's x — kept
+// safely below the egg/synergid cluster's lowest point so the horizontal
+// leg never crosses through the visible cell structures, and safely above
+// the ovary floor even though the integument itself nearly reaches it.
+const TRAVERSE_Y = Math.min(CLUSTER_BOTTOM_Y + 4, OVARY_BOTTOM_Y - 10);
+
+function buildTubePath({ originX, originY, hours, guided }) {
+  // Elongation rate is the same for both tubes and independent of
+  // chemRelease — a pollen tube grows through the style on its own
+  // reserves, not because the ovule has signaled. Only the guided tube's
+  // *direction* differs (see the phase logic below); the control tube
+  // grows exactly as far, it just never curves in.
+  const totalLen = Math.max(0, TUBE_RATE * hours);
+  const steps = 90;
+  const segLen = totalLen / steps;
+  let x = originX, y = originY;
+  // phase 1 = hugging the outer margin down past the ovule, 2 = cutting
+  // back toward the micropyle's x below the cluster, 3 = rising straight
+  // up the micropyle canal into the egg apparatus.
+  let phase = 1;
+  const pts = [{ x, y }];
+  for (let i = 1; i <= steps; i++) {
+    if (!guided) {
+      y += segLen;
+    } else if (phase === 1) {
+      // Hug the gap between the ovary wall and the integument by tracking
+      // the safe channel x from the tube's post-step y on every iteration
+      // (not the pre-step y) — deriving x from y < OVARY_TOP_Y ? originX :
+      // leftChannelX(y) fresh each time means there's no stale-x lag at the
+      // moment it crosses into the ovary, even for a large single step.
+      y = Math.min(y + segLen, TRAVERSE_Y);
+      x = y < OVARY_TOP_Y ? originX : leftChannelX(y);
+      if (y >= TRAVERSE_Y) phase = 2;
+    } else if (phase === 2) {
+
+      // Cut across toward the micropyle's x while staying below the
+      // cluster — this leg never enters the cells' y-range.
+      const dx = MICROPYLE_X - x;
+      if (Math.abs(dx) <= segLen) { x = MICROPYLE_X; phase = 3; }
+      else { x += Math.sign(dx) * segLen; }
+    } else {
+      // Rise straight up the micropyle canal into the egg apparatus —
+      // the same approach direction real anatropous ovules present to
+      // the tube, entering through the opening rather than across it.
+      const dy = MICROPYLE_Y - y;
+      if (Math.abs(dy) <= segLen) { y = MICROPYLE_Y; }
+      else { y += Math.sign(dy) * segLen; }
+    }
+    pts.push({ x, y });
+    // Stop the control tube once it's grown well past the ovule — it never
+    // curves in, so without this it would just keep going straight forever.
+    if (!guided && y >= OVARY_TOP_Y + OVARY_H * 0.88) break;
+    // Stop guided tube once it has reached the micropyle
+    if (guided && phase === 3 && Math.hypot(x - MICROPYLE_X, y - MICROPYLE_Y) < 4) break;
+  }
+  return pts;
+}
+
+function pathD(pts) {
+  if (pts.length < 2) return "";
+  // Build a smooth path using quadratic bezier through midpoints for organic feel
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i].x + pts[i + 1].x) / 2;
+    const my = (pts[i].y + pts[i + 1].y) / 2;
+    d += ` Q ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)}`;
+  }
+  const last = pts[pts.length - 1];
+  const prev = pts[pts.length - 2];
+  d += ` Q ${prev.x.toFixed(1)} ${prev.y.toFixed(1)} ${last.x.toFixed(1)} ${last.y.toFixed(1)}`;
+  return d;
+}
+
+/* =========================================================================
+   PISTIL MARKUP
+========================================================================= */
+function pistilMarkup(cx) {
+  const stigmaRx = 32, stigmaRy = STIGMA_H * 0.55;
+  const stigmaCy = STIGMA_TOP_Y + STIGMA_H * 0.35;
+  const styleLeft = cx - STYLE_W / 2, styleRight = cx + STYLE_W / 2;
+  const ovaryLeft = cx - OVARY_W / 2, ovaryRight = cx + OVARY_W / 2;
+  const ovaryBottom = OVARY_TOP_Y + OVARY_H;
+
+  let fuzz = "";
+  let seed = 7;
+  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for (let a = -76; a <= 76; a += 8) {
+    const rad = (a * Math.PI) / 180;
+    const lenJitter = 3 + rand() * 4;
+    const x1 = cx + Math.sin(rad) * (stigmaRx - 6), y1 = stigmaCy - Math.cos(rad) * (stigmaRy - 4);
+    const x2 = cx + Math.sin(rad) * (stigmaRx + lenJitter), y2 = stigmaCy - Math.cos(rad) * (stigmaRy + lenJitter);
+    fuzz += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#e8a3b3" stroke-width="${(1.1 + rand()*0.8).toFixed(1)}" stroke-linecap="round" opacity="${(0.6+rand()*0.35).toFixed(2)}"></line>`;
+  }
+
+  let styleTexture = "";
+  for (let sx = styleLeft + 6; sx < styleRight - 4; sx += 7) {
+    styleTexture += `<line x1="${sx.toFixed(1)}" y1="${STYLE_TOP_Y + 6}" x2="${sx.toFixed(1)}" y2="${OVARY_TOP_Y - 6}" stroke="rgba(255,255,255,0.08)" stroke-width="1"></line>`;
+  }
+
+  return `
+    <path d="M ${styleLeft} ${STYLE_TOP_Y} Q ${styleLeft} ${STYLE_TOP_Y - 26} ${cx} ${stigmaCy}
+             Q ${styleRight} ${STYLE_TOP_Y - 26} ${styleRight} ${STYLE_TOP_Y}
+             L ${ovaryRight} ${OVARY_TOP_Y}
+             Q ${ovaryRight + 14} ${OVARY_TOP_Y + OVARY_H * 0.5} ${ovaryRight - 6} ${ovaryBottom}
+             L ${ovaryLeft + 6} ${ovaryBottom}
+             Q ${ovaryLeft - 14} ${OVARY_TOP_Y + OVARY_H * 0.5} ${ovaryLeft} ${OVARY_TOP_Y}
+             Z" fill="url(#styleGrad)" stroke="rgba(0,0,0,0.25)" stroke-width="1"></path>
+    ${styleTexture}
+    <ellipse cx="${cx}" cy="${stigmaCy}" rx="${stigmaRx}" ry="${stigmaRy}" fill="url(#stigmaGrad)" stroke="rgba(0,0,0,0.25)" stroke-width="1"></ellipse>
+    ${fuzz}
+    <ellipse cx="${(cx-8).toFixed(1)}" cy="${(stigmaCy-6).toFixed(1)}" rx="9" ry="6" fill="rgba(255,255,255,0.25)"></ellipse>
+    <ellipse cx="${(cx-8).toFixed(1)}" cy="${(OVARY_TOP_Y + OVARY_H * 0.42).toFixed(1)}" rx="10" ry="14" fill="rgba(255,255,255,0.14)"></ellipse>
+  `;
+}
+
+/* =========================================================================
+   OVARY ANATOMY — embryo sac, synergids, egg, polar nuclei
+   Drawn on top of the pistil so detail is visible.
+========================================================================= */
+function ovaryAnatomyMarkup(cx, stimIntensity) {
+  // Embryo sac (inner oval inside the ovary) — uses the shared SAC_RX/
+  // SAC_RY/SAC_CY/INTEG_RX/INTEG_RY constants (defined near the tube-path
+  // geometry) instead of recomputing the same formula locally, so the two
+  // can never drift apart if OVARY_W/OVARY_H are ever retuned.
+
+  // Micropyle position
+  const microX = cx + MICROPYLE_OFFSET_X;
+  const microY = MICROPYLE_Y;
+
+  // Synergid cells — flanking the egg, near the micropyle
+  const synCy = microY - 12;
+  const eggCy = microY + 8;
+
+  // Chemoattractant glow opacity grows with stim intensity
+  const chemoOpacity = Math.min(1, stimIntensity * 1.4 + 0.08);
+  const chemoSize = 14 + 22 * stimIntensity;
+
+  // Gradient label opacity
+  const labelAlpha = Math.min(0.9, stimIntensity * 2.5);
+
+  let html = `
+    <!-- Embryo sac -->
+    <ellipse cx="${cx.toFixed(1)}" cy="${SAC_CY.toFixed(1)}" rx="${SAC_RX.toFixed(1)}" ry="${SAC_RY.toFixed(1)}"
+      fill="url(#embryoSacGrad)" stroke="rgba(180,230,150,0.22)" stroke-width="1.2" opacity="0.88"></ellipse>
+    <!-- Integuments (outer layers) -->
+    <ellipse cx="${cx.toFixed(1)}" cy="${SAC_CY.toFixed(1)}" rx="${INTEG_RX.toFixed(1)}" ry="${INTEG_RY.toFixed(1)}"
+      fill="none" stroke="rgba(120,180,80,0.18)" stroke-width="2.5"></ellipse>
+
+    <!-- Polar nuclei (two overlapping circles, center of sac) -->
+    <circle cx="${(cx-5).toFixed(1)}" cy="${(SAC_CY-4).toFixed(1)}" r="7"
+      fill="rgba(160,230,160,0.45)" stroke="rgba(120,200,120,0.4)" stroke-width="1"></circle>
+    <circle cx="${(cx+5).toFixed(1)}" cy="${(SAC_CY+2).toFixed(1)}" r="7"
+      fill="rgba(160,230,160,0.45)" stroke="rgba(120,200,120,0.4)" stroke-width="1"></circle>
+
+    <!-- Chemoattractant gradient (brightens as tube approaches) -->
+    <ellipse cx="${microX.toFixed(1)}" cy="${(microY-4).toFixed(1)}"
+      rx="${chemoSize.toFixed(1)}" ry="${(chemoSize*0.75).toFixed(1)}"
+      fill="url(#attractantGlow)" opacity="${chemoOpacity.toFixed(2)}"></ellipse>
+
+    <!-- Synergid cells (left & right of micropyle) -->
+    <ellipse cx="${(microX-11).toFixed(1)}" cy="${synCy.toFixed(1)}" rx="9" ry="13"
+      fill="rgba(240,210,100,0.72)" stroke="rgba(200,165,40,0.6)" stroke-width="1"></ellipse>
+    <circle cx="${(microX-11).toFixed(1)}" cy="${(synCy-5).toFixed(1)}" r="3.5"
+      fill="rgba(255,180,50,0.75)" stroke="rgba(200,130,20,0.5)" stroke-width="0.7"></circle>
+    <ellipse cx="${(microX+11).toFixed(1)}" cy="${synCy.toFixed(1)}" rx="9" ry="13"
+      fill="rgba(240,210,100,0.72)" stroke="rgba(200,165,40,0.6)" stroke-width="1"></ellipse>
+    <circle cx="${(microX+11).toFixed(1)}" cy="${(synCy-5).toFixed(1)}" r="3.5"
+      fill="rgba(255,180,50,0.75)" stroke="rgba(200,130,20,0.5)" stroke-width="0.7"></circle>
+
+    <!-- Egg cell -->
+    <ellipse cx="${microX.toFixed(1)}" cy="${eggCy.toFixed(1)}" rx="10" ry="13"
+      fill="rgba(160,210,255,0.7)" stroke="rgba(100,170,230,0.55)" stroke-width="1.2"></ellipse>
+    <circle cx="${microX.toFixed(1)}" cy="${(eggCy-2).toFixed(1)}" r="4"
+      fill="rgba(200,235,255,0.7)" stroke="rgba(100,180,240,0.4)" stroke-width="0.7"></circle>
+
+    <!-- Micropyle opening marker -->
+    <line x1="${(microX-8).toFixed(1)}" y1="${(microY+20).toFixed(1)}"
+          x2="${(microX+8).toFixed(1)}" y2="${(microY+20).toFixed(1)}"
+      stroke="rgba(255,220,80,0.45)" stroke-width="1.5" stroke-linecap="round"></line>
+    <text x="${microX.toFixed(1)}" y="${(microY+30).toFixed(1)}"
+      text-anchor="middle" font-size="8" fill="rgba(255,220,80,${(0.4 + labelAlpha*0.4).toFixed(2)})"
+      font-style="italic">micropyle</text>
+
+    <!-- Chemoattractant concentration label (fades in as stim grows) -->
+    <text x="${(microX+28).toFixed(1)}" y="${(microY-10).toFixed(1)}"
+      text-anchor="start" font-size="8" fill="rgba(255,220,80,${(labelAlpha*0.75).toFixed(2)})"
+      font-style="italic">↑ [LURE]</text>
+  `;
+
+  // Floating chemoattractant dots in the ovary — appear and drift upward as stimIntensity rises
+  if (stimIntensity > 0.05) {
+    const t = performance.now() * 0.001;
+    for (let i = 0; i < 6; i++) {
+      const phase = (i / 6) * Math.PI * 2 + t * (0.4 + i * 0.07);
+      const r = 4 + (i % 3) * 4;
+      const px = microX + Math.sin(phase) * r * 1.4;
+      const py = microY - 8 - (((t * 6 + i * 8) % 30) * stimIntensity * 1.2);
+      const alpha = Math.max(0, Math.min(0.7, stimIntensity * 1.6 - (i * 0.05)));
+      html += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="2.2"
+        fill="rgba(255,210,60,${alpha.toFixed(2)})" opacity="${alpha.toFixed(2)}"></circle>`;
+    }
+  }
+
+  return html;
+}
+
+/* =========================================================================
+   STAMEN MARKUP
+========================================================================= */
+const ANTHER_X = leftX, ANTHER_Y = 150;
+const FILAMENT_BASE_Y = 440;
+
+function stamenMarkup(cx) {
+  const petalTipY = FILAMENT_BASE_Y - 6;
+  let petals = "";
+  [-46, -20, 20, 46].forEach((angleDeg, idx) => {
+    const rad = (angleDeg * Math.PI) / 180;
+    const len = 150;
+    const tipX = cx + Math.sin(rad) * len * 0.45;
+    const tipY = petalTipY - len;
+    const spread = 26;
+    const petalD = `M ${cx - spread} ${petalTipY} Q ${cx + Math.sin(rad) * len * 0.3} ${petalTipY - len * 0.6} ${tipX.toFixed(1)} ${tipY.toFixed(1)} Q ${cx + Math.sin(rad) * len * 0.55} ${petalTipY - len * 0.55} ${cx + spread} ${petalTipY} Z`;
+    let veins = "";
+    [-0.5, 0, 0.5].forEach((vf) => {
+      const vx = cx + Math.sin(rad) * len * 0.42 * (0.55 + vf * 0.4);
+      const vy = petalTipY - len * 0.85 * (0.55 + Math.abs(vf) * 0.3);
+      veins += `<path d="M ${cx + vf * 12} ${petalTipY - 8} Q ${(cx + Math.sin(rad) * len * 0.2 + vf * 10).toFixed(1)} ${(petalTipY - len * 0.45).toFixed(1)} ${vx.toFixed(1)} ${vy.toFixed(1)}" fill="none" stroke="rgba(120,30,55,0.3)" stroke-width="1" transform="rotate(${angleDeg} ${cx} ${petalTipY})"></path>`;
+    });
+    let spots = "";
+    for (let i = 0; i < 4; i++) {
+      const sf = 0.25 + i * 0.12;
+      const sx = cx + (idx % 2 === 0 ? -1 : 1) * (3 + i * 3);
+      const sy = petalTipY - len * sf;
+      spots += `<ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="2.2" ry="1.4" fill="rgba(140,20,50,0.4)" transform="rotate(${angleDeg} ${cx} ${petalTipY})"></ellipse>`;
+    }
+    petals += `<path d="${petalD}" fill="url(#petalGrad)" stroke="rgba(90,20,40,0.3)" stroke-width="1" transform="rotate(${angleDeg} ${cx} ${petalTipY})"></path>${veins}${spots}`;
+  });
+
+  let grains = "";
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    const r = 5 + (i % 3) * 3;
+    const gr = 1.7 + (i % 3) * 0.5;
+    grains += `<circle cx="${(cx + Math.cos(a) * r).toFixed(1)}" cy="${(ANTHER_Y + Math.sin(a) * r * 0.6).toFixed(1)}" r="${gr}" fill="url(#grainGrad)" stroke="rgba(120,80,10,0.5)" stroke-width="0.5"></circle>`;
+  }
+  let looseGrains = "";
+  [[14, 26, 2.8], [-18, 34, 2.3], [8, 46, 2.9], [-6, 22, 2.1]].forEach(([dx, dy, gr]) => {
+    looseGrains += `<circle cx="${cx + dx}" cy="${ANTHER_Y + dy}" r="${gr}" fill="url(#grainGrad)" stroke="rgba(120,80,10,0.5)" stroke-width="0.6"></circle>`;
+  });
+
+  // Stem goes from petal base down to near the label area
+  const STEM_BOTTOM_Y = 478;
+  const RECEPTACLE_Y  = FILAMENT_BASE_Y + 4; // knob where petals + filament meet stem
+
+  // Sepals — small pointed green leaves fanning out from the receptacle
+  let sepals = "";
+  [-38, -18, 0, 18, 38].forEach((angleDeg) => {
+    const rad = (angleDeg * Math.PI) / 180;
+    const sepalLen = 28 + Math.abs(Math.sin(rad)) * 8;
+    const tipX = cx + Math.sin(rad) * sepalLen * 0.55;
+    const tipY = RECEPTACLE_Y + Math.abs(Math.cos(rad)) * sepalLen * 0.6 - sepalLen * 0.3;
+    sepals += `<path d="M ${cx - 6} ${RECEPTACLE_Y} Q ${cx + Math.sin(rad) * sepalLen * 0.4} ${(RECEPTACLE_Y - sepalLen * 0.3).toFixed(1)} ${tipX.toFixed(1)} ${tipY.toFixed(1)} Q ${cx + Math.sin(rad) * sepalLen * 0.6} ${(RECEPTACLE_Y - sepalLen * 0.1).toFixed(1)} ${cx + 6} ${RECEPTACLE_Y} Z"
+      fill="#4d7a36" stroke="rgba(0,0,0,0.2)" stroke-width="0.7" opacity="0.9"></path>`;
+  });
+
+  return `
+    ${sepals}
+    <!-- Stem — green stalk from receptacle to bottom -->
+    <path d="M ${cx - 4} ${RECEPTACLE_Y} Q ${cx - 8} ${(RECEPTACLE_Y + (STEM_BOTTOM_Y - RECEPTACLE_Y) * 0.45).toFixed(1)} ${cx} ${STEM_BOTTOM_Y}"
+      fill="none" stroke="#5f8a4a" stroke-width="7" stroke-linecap="round"></path>
+    <path d="M ${cx - 4} ${RECEPTACLE_Y} Q ${cx - 8} ${(RECEPTACLE_Y + (STEM_BOTTOM_Y - RECEPTACLE_Y) * 0.45).toFixed(1)} ${cx} ${STEM_BOTTOM_Y}"
+      fill="none" stroke="#9ac37f" stroke-width="3" stroke-linecap="round" opacity="0.45"></path>
+    <!-- Receptacle node — rounded knob at the base of the petals -->
+    <ellipse cx="${cx}" cy="${RECEPTACLE_Y}" rx="14" ry="9" fill="#4d7a36" stroke="rgba(0,0,0,0.25)" stroke-width="1"></ellipse>
+    <ellipse cx="${(cx - 4).toFixed(1)}" cy="${(RECEPTACLE_Y - 2).toFixed(1)}" rx="5" ry="3" fill="rgba(255,255,255,0.14)"></ellipse>
+    ${petals}
+    <!-- Filament — central stalk from receptacle up to the anther -->
+    <line x1="${cx}" y1="${RECEPTACLE_Y - 6}" x2="${cx}" y2="${ANTHER_Y + 10}"
+      stroke="#6a9a54" stroke-width="5" stroke-linecap="round"></line>
+    <line x1="${cx}" y1="${RECEPTACLE_Y - 6}" x2="${cx}" y2="${ANTHER_Y + 10}"
+      stroke="rgba(200,255,160,0.22)" stroke-width="2.5" stroke-linecap="round"></line>
+    <ellipse cx="${cx - 9}" cy="${ANTHER_Y}" rx="12" ry="17" fill="url(#antherGrad)" stroke="rgba(120,80,10,0.5)" stroke-width="1"></ellipse>
+    <ellipse cx="${cx + 9}" cy="${ANTHER_Y}" rx="12" ry="17" fill="url(#antherGrad)" stroke="rgba(120,80,10,0.5)" stroke-width="1"></ellipse>
+    <path d="M ${cx - 9} ${ANTHER_Y - 15} L ${cx - 9} ${ANTHER_Y + 15}" stroke="rgba(120,80,10,0.4)" stroke-width="0.8"></path>
+    <path d="M ${cx + 9} ${ANTHER_Y - 15} L ${cx + 9} ${ANTHER_Y + 15}" stroke="rgba(120,80,10,0.4)" stroke-width="0.8"></path>
+    <rect x="${cx - 9}" y="${ANTHER_Y - 3}" width="18" height="6" fill="#c9962e"></rect>
+    ${grains}
+    ${looseGrains}
+  `;
+}
+
+/* =========================================================================
+   STIGMA GERMINATION GRAIN — pollen grain sitting on the stigma after
+   pollination, with a visible tube emerging downward.
+========================================================================= */
+function stigmaGrainMarkup(hours) {
+  const safeHours = Math.max(0, hours);
+  const stigmaCy = STIGMA_TOP_Y + STIGMA_H * 0.35;
+  // Grain sits on the stigma surface
+  const grainX = rightX - 4, grainY = stigmaCy - 6;
+  // Germination pore / tube emergence length (grows from 0 over first ~3 hours)
+  const germLen = Math.min(14, safeHours * 4.5);
+  const germOpacity = Math.min(1, safeHours * 0.8);
+
+  let html = `
+    <!-- Landed pollen grain -->
+    <circle cx="${grainX}" cy="${grainY}" r="5.5" fill="url(#grainGrad)" stroke="rgba(120,80,10,0.6)" stroke-width="1"></circle>
+    <!-- Germination glow -->
+    <circle cx="${grainX}" cy="${grainY}" r="${(5.5 + 4 * germOpacity).toFixed(1)}" fill="url(#germGlow)" opacity="${(germOpacity*0.55).toFixed(2)}"></circle>
+  `;
+  if (germLen > 0) {
+    // Emerging tube stub at the bottom of the grain
+    html += `<line x1="${grainX}" y1="${grainY + 5}" x2="${grainX}" y2="${(grainY + 5 + germLen).toFixed(1)}"
+      stroke="#f0923e" stroke-width="3.5" stroke-linecap="round" opacity="${germOpacity.toFixed(2)}"></line>`;
+    // Tube tip bulge
+    html += `<circle cx="${grainX}" cy="${(grainY + 5 + germLen).toFixed(1)}" r="2.5"
+      fill="#ffb066" opacity="${germOpacity.toFixed(2)}"></circle>`;
+  }
+  return html;
+}
+
+/* =========================================================================
+   MAIN RENDER
+========================================================================= */
+let tipPositions = { right: null, control: null };
+
+function getStimIntensity(guidedTip) {
+  if (!guidedTip || !state.germinated || state.hours === 0) return 0;
+  const distToMicro = Math.hypot(guidedTip.x - MICROPYLE_X, guidedTip.y - MICROPYLE_Y);
+  return Math.max(0, Math.min(1, 1 - distToMicro / OVARY_H));
+}
+
+function render() {
+  const { hours, pollinated, germinated } = state;
+  document.getElementById("hoursReadout").textContent = `t = ${hours.toFixed(1)}h`;
+
+  document.getElementById("leftFlower").innerHTML = stamenMarkup(leftX);
+
+  // Draw pistil base first
+  document.getElementById("rightPistil").innerHTML = pistilMarkup(rightX);
+
+  // Tubes grow only after germination is initiated
+  const effectiveHours = germinated ? hours : 0;
+
+  // Build tube paths
+  const guidedPts  = buildTubePath({ originX: GUIDED_START_X,  originY: TUBE_ORIGIN_Y, hours: effectiveHours, guided: true  });
+  const controlPts = buildTubePath({ originX: CONTROL_START_X, originY: TUBE_ORIGIN_Y, hours: effectiveHours, guided: false });
+  const guidedTip  = guidedPts[guidedPts.length - 1];
+  const controlTip = controlPts[controlPts.length - 1];
+
+  tipPositions = { right: germinated ? guidedTip : null, control: germinated ? controlTip : null };
+
+  // Wave loop idles itself out when there's nothing to animate; wake it
+  // back up whenever growth is active (e.g. after scrubbing the slider).
+  if (germinated && hours > 0) startWaveLoop();
+
+  const stimIntensity = getStimIntensity(guidedTip);
+
+  // Detect ovule entry (tube tip has crossed into ovary zone)
+  const inOvary = germinated && guidedTip.y >= OVARY_TOP_Y;
+  if (inOvary && !state.ovuleDetected) {
+    state.ovuleDetected = true;
+    // Flash the experimental stat card green
+    const card = document.getElementById("expCard");
+    card.classList.remove("ovule-detected");
+    void card.offsetWidth;
+    card.classList.add("ovule-detected");
+  }
+
+  // Draw ovary anatomy (below tubes so tubes appear on top)
+  document.getElementById("rightOvaryAnatomy").innerHTML = ovaryAnatomyMarkup(rightX, germinated ? stimIntensity : 0);
+
+  // Draw control tube (purple, dashed) — grows straight, misses micropyle
+  let controlHtml = "";
+  if (germinated && effectiveHours > 0) {
+    controlHtml += `<path d="${pathD(controlPts)}" fill="none" stroke="#a06cd5" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 3" opacity="0.8"></path>`;
+    controlHtml += `<circle cx="${controlTip.x.toFixed(1)}" cy="${controlTip.y.toFixed(1)}" r="3.5" fill="#9358c9" opacity="0.85"></circle>`;
+  }
+  document.getElementById("controlTubeLayer").innerHTML = controlHtml;
+
+  // Draw guided tube (orange, solid)
+  let guidedHtml = "";
+  if (germinated && effectiveHours > 0) {
+    guidedHtml += `<path d="${pathD(guidedPts)}" fill="none" stroke="#f0923e" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>`;
+    guidedHtml += `<path d="${pathD(guidedPts)}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>`;
+    guidedHtml += `<circle cx="${guidedTip.x.toFixed(1)}" cy="${guidedTip.y.toFixed(1)}" r="5.5" fill="#ffb066" stroke="rgba(180,110,30,0.5)" stroke-width="1"></circle>`;
+    const nucleusPt = guidedPts[Math.max(0, guidedPts.length - 6)];
+    guidedHtml += `<circle cx="${nucleusPt.x.toFixed(1)}" cy="${nucleusPt.y.toFixed(1)}" r="3" fill="#c9a6e0" stroke="rgba(100,60,150,0.4)" stroke-width="0.8"></circle>`;
+  }
+  document.getElementById("guidedTubeLayer").innerHTML = guidedHtml;
+
+  // Stigma grain — show once pollinated (grain visible), germination detail only after germination
+  if (pollinated) {
+    document.getElementById("stigmaGrain").innerHTML = stigmaGrainMarkup(effectiveHours);
+  } else {
+    document.getElementById("stigmaGrain").innerHTML = "";
+  }
+
+  // Tube labels
+  document.getElementById("tubeLabels").setAttribute("opacity", germinated && hours > 0 ? "1" : "0");
+
+  // Clickable marker at the control tube's end + its toggled info callout —
+  // only shown once the control tube actually has a visible end to point at.
+  const markerEl = document.getElementById("controlEndMarker");
+  const calloutEl = document.getElementById("controlEndCallout");
+  const controlEndVisible = germinated && effectiveHours > 0;
+  markerEl.setAttribute("opacity", controlEndVisible ? "1" : "0");
+  if (controlEndVisible) {
+    const t = `translate(${controlTip.x.toFixed(1)}, ${controlTip.y.toFixed(1)})`;
+    markerEl.setAttribute("transform", t);
+    calloutEl.setAttribute("transform", t);
+  }
+  calloutEl.setAttribute("opacity", controlEndVisible && controlCalloutOpen ? "1" : "0");
+
+  // Germinate button — enable only when pollinated and not yet germinated
+  const germinateBtn = document.getElementById("germinateBtn");
+  if (!pollinated || germinated) {
+    germinateBtn.disabled = true;
+    germinateBtn.classList.remove("germ-ready");
+  } else {
+    germinateBtn.disabled = false;
+    germinateBtn.classList.add("germ-ready");
+  }
+
+  // Stat cards
+  const distToMicro = germinated ? Math.hypot(guidedTip.x - MICROPYLE_X, guidedTip.y - MICROPYLE_Y) : Infinity;
+  const reached = distToMicro < 8;
+
+  // Release the two male gametes once the tube has reached the micropyle;
+  // retract them if the timeline is scrubbed back before that point.
+  if (reached && !state.fertilized) {
+    state.fertilized = true;
+    startGametes();
+  } else if (!reached && state.fertilized) {
+    state.fertilized = false;
+    stopGametes();
+  }
+
+  document.getElementById("controlStat").textContent = !pollinated
+    ? "Waiting for pollination. A control tube will grow through the style and into the ovary at the same rate as the guided tube — but with no directional guidance, it can't home in on the micropyle."
+    : !germinated
+      ? "Pollen grain on stigma. Press Germinate to initiate tube growth."
+      : effectiveHours < 4
+        ? "Germinating on stigma surface. Tube entering the style."
+        : controlTip.y >= OVARY_TOP_Y
+          ? "Unguided tube reached the ovary — but grows straight past the egg cell, missing the micropyle. It grew just as far as the guided tube; it simply never received directional guidance."
+          : "Unguided tube growing through the style, no directional signal.";
+
+  const expStatEl = document.getElementById("experimentalStat");
+  let expText = "";
+  if (!pollinated) {
+    expText = "Not yet responding.";
+  } else if (!germinated) {
+    expText = "Pollen grain hydrating on stigma surface. Awaiting germination signal.";
+  } else if (effectiveHours === 0) {
+    expText = "Germination initiated — tube emerging from grain.";
+  } else if (!inOvary) {
+    expText = `Growing through style transmitting tissue (${Math.round(effectiveHours)}h elapsed).`;
+  } else if (reached) {
+    expText = "✓ Entered the micropyle — chemotropic guidance successful. Double fertilization underway.";
+  } else {
+    expText = `Curving toward the micropyle following the LURE / Ca²⁺ gradient — ${Math.max(0, 100 - Math.round(distToMicro)).toFixed(0)}% there.`;
+  }
+  expStatEl.innerHTML = expText
+    + (state.ovuleDetected && !reached
+        ? `<br><span class="detected-badge">⬤ Detected ovule</span>`
+        : reached
+        ? `<br><span class="detected-badge">✓ Ovule fertilised</span>`
+        : "");
+}
+
+render();
+
+/* =========================================================================
+   TUBE-TIP WAVE POOL
+   Expanding ring waves from the guided tube tip.
+   Red  (rgb 220,70,70)  while inside the style — no chemical signal.
+   Green(rgb 60,210,100) once the tip enters the ovary and detects chemicals.
+   Colour lerps smoothly between those two as detectionFrac goes 0→1.
+========================================================================= */
+const NS_SVG = "http://www.w3.org/2000/svg";
+let waveLoopId = null;
+let lastWaveSpawnTime = 0;
+const WAVE_INTERVAL  = 480;  // ms between new waves
+const WAVE_DURATION  = 900;  // ms each wave takes to expand and fade
+const WAVE_MAX_R     = 28;   // maximum radius reached
+
+const waves = []; // { el, born, tipX, tipY }
+
+function lerpColor(t) {
+  // t=0 → reddish,  t=1 → green
+  const r = Math.round(220 + (60  - 220) * t);
+  const g = Math.round(70  + (210 - 70)  * t);
+  const b = Math.round(70  + (100 - 70)  * t);
+  return { r, g, b };
+}
+
+function spawnWave(tipX, tipY, detFrac) {
+  const el = document.createElementNS(NS_SVG, "circle");
+  el.setAttribute("fill", "none");
+  el.setAttribute("stroke-width", "2");
+  el.setAttribute("r", "5");
+  el.setAttribute("cx", tipX.toFixed(1));
+  el.setAttribute("cy", tipY.toFixed(1));
+  document.getElementById("tubeWaves").appendChild(el);
+  waves.push({ el, born: performance.now(), tipX, tipY, detFrac });
+}
+
+function stepWaves(now) {
+  // Update existing waves
+  for (let i = waves.length - 1; i >= 0; i--) {
+    const w = waves[i];
+    const age = now - w.born;
+    const t   = Math.min(1, age / WAVE_DURATION);
+    // Ease-out expansion
+    const radius  = 5 + (WAVE_MAX_R - 5) * (1 - Math.pow(1 - t, 2));
+    const opacity = (1 - t) * 0.72;
+    const { r, g, b } = lerpColor(w.detFrac);
+    w.el.setAttribute("r", radius.toFixed(1));
+    w.el.setAttribute("stroke", `rgba(${r},${g},${b},${opacity.toFixed(2)})`);
+    if (t >= 1) {
+      w.el.parentNode && w.el.parentNode.removeChild(w.el);
+      waves.splice(i, 1);
+    }
+  }
+
+  // Spawn a new wave if tube is growing
+  if (state.germinated && state.hours > 0 && tipPositions.right) {
+    if (now - lastWaveSpawnTime >= WAVE_INTERVAL) {
+      const tip = tipPositions.right;
+      // Detection fraction: 0 in style, rises once inside ovary
+      const inOvary = tip.y >= OVARY_TOP_Y;
+      const detFrac = inOvary
+        ? Math.min(1, (tip.y - OVARY_TOP_Y) / (MICROPYLE_Y - OVARY_TOP_Y))
+        : 0;
+      spawnWave(tip.x, tip.y, detFrac);
+      lastWaveSpawnTime = now;
+    }
+  }
+
+  // Only keep looping while there's real work: waves still fading, or
+  // growth still active and able to spawn more. Otherwise go idle instead
+  // of running requestAnimationFrame forever at 60fps. startWaveLoop()
+  // (called from render()) wakes it back up if growth resumes.
+  const stillGrowing = state.germinated && state.hours > 0 && tipPositions.right;
+  waveLoopId = (waves.length > 0 || stillGrowing) ? requestAnimationFrame(stepWaves) : null;
+}
+
+function startWaveLoop() {
+  if (waveLoopId) return;
+  lastWaveSpawnTime = 0;
+  waveLoopId = requestAnimationFrame(stepWaves);
+}
+
+function stopWaveLoop() {
+  if (waveLoopId) cancelAnimationFrame(waveLoopId);
+  waveLoopId = null;
+  waves.forEach(w => w.el.parentNode && w.el.parentNode.removeChild(w.el));
+  waves.length = 0;
+}
+
+/* =========================================================================
+   CHEMICAL SIGNAL PARTICLE SYSTEM
+   Green LURE / Ca²⁺ particles released from the synergid / micropyle region
+   and drift upward through the style transmitting tissue.
+   Each particle is a small glowing green circle spawned near MICROPYLE_Y,
+   travels upward hugging the GUIDED tube's path through the style (never
+   the control tube's, which sits further right), and fades out as it
+   approaches the stigma. Spawning stops automatically once the guided
+   tube has entered the ovule and fertilized it — the signal has done its
+   job, so there's nothing left to secrete.
+========================================================================= */
+const CHEM_STYLE_TOP    = STYLE_TOP_Y;          // y where style meets stigma
+const CHEM_SPAWN_Y      = MICROPYLE_Y + 5;      // particles start just below micropyle
+const CHEM_STYLE_HALF_W = 8;                    // lateral constraint — tight around the guided tube's path only, clear of the control tube
+const CHEM_SPAWN_RATE   = 90;                   // ms between spawns
+const CHEM_SPEED_MIN    = 28;                   // px/s upward minimum
+const CHEM_SPEED_MAX    = 60;                   // px/s upward maximum
+
+let chemLoopId   = null;
+let lastChemSpawn = 0;
+let lastChemFrameTime = 0;
+const chemParts  = []; // { el, x, y, vy, vx, born, totalTravel }
+
+function spawnChemParticle() {
+  const el = document.createElementNS(NS_SVG, "circle");
+  const r  = 2 + Math.random() * 2.2;
+  el.setAttribute("r", r.toFixed(1));
+  el.setAttribute("fill", `rgba(60,220,100,0.85)`);
+  el.setAttribute("stroke", "rgba(30,180,70,0.4)");
+  el.setAttribute("stroke-width", "0.6");
+  el.setAttribute("opacity", "0");
+  document.getElementById("chemParticles").appendChild(el);
+
+  const x  = GUIDED_START_X + (Math.random() - 0.5) * CHEM_STYLE_HALF_W * 1.6;
+  const vy = -(CHEM_SPEED_MIN + Math.random() * (CHEM_SPEED_MAX - CHEM_SPEED_MIN));
+  const vx = (Math.random() - 0.5) * 6;
+  const totalTravel = CHEM_SPAWN_Y - CHEM_STYLE_TOP; // full path length
+  chemParts.push({ el, x, y: CHEM_SPAWN_Y, vy, vx, born: performance.now(), totalTravel });
+}
+
+function stepChemParticles(now) {
+  // Use actual elapsed time so particle speed is correct at any frame rate,
+  // clamped to avoid a large jump after the tab was backgrounded.
+  const dt = lastChemFrameTime ? Math.min((now - lastChemFrameTime) / 1000, 0.1) : 1 / 60;
+  lastChemFrameTime = now;
+
+  for (let i = chemParts.length - 1; i >= 0; i--) {
+    const p = chemParts[i];
+    p.y += p.vy * dt;
+    p.x += p.vx * dt;
+
+    // Soft wall — keep hugging the guided tube's path, not the full style
+    const dx = p.x - GUIDED_START_X;
+    if (Math.abs(dx) > CHEM_STYLE_HALF_W) p.vx *= -0.6;
+    p.x = GUIDED_START_X + Math.max(-CHEM_STYLE_HALF_W, Math.min(CHEM_STYLE_HALF_W, dx));
+
+    // Fade: ramp in over bottom 15 %, ramp out over top 30 %
+    const progress = (CHEM_SPAWN_Y - p.y) / p.totalTravel; // 0 at spawn, 1 at top
+    let alpha;
+    if (progress < 0.15)      alpha = progress / 0.15;
+    else if (progress > 0.70) alpha = (1 - progress) / 0.30;
+    else                       alpha = 1;
+    alpha = Math.max(0, Math.min(1, alpha)) * 0.85;
+
+    p.el.setAttribute("cx", p.x.toFixed(1));
+    p.el.setAttribute("cy", p.y.toFixed(1));
+    p.el.setAttribute("opacity", alpha.toFixed(2));
+
+    // Remove once it exits the style or fully faded
+    if (p.y < CHEM_STYLE_TOP - 10 || alpha <= 0) {
+      p.el.parentNode && p.el.parentNode.removeChild(p.el);
+      chemParts.splice(i, 1);
+    }
+  }
+
+  // Spawn new particles while active — but not once the guided tube has
+  // already entered the ovule and fertilized it; the signal has done its
+  // job. Existing particles already in flight keep animating and fading
+  // out normally, they just aren't replenished.
+  if (state.chemRelease && !state.fertilized && now - lastChemSpawn >= CHEM_SPAWN_RATE) {
+    spawnChemParticle();
+    lastChemSpawn = now;
+  }
+
+  // Keep looping as long as there are live particles or release is still active
+  if ((state.chemRelease && !state.fertilized) || chemParts.length > 0) {
+    chemLoopId = requestAnimationFrame(stepChemParticles);
+  } else {
+    chemLoopId = null;
+  }
+}
+
+function startChemLoop() {
+  if (chemLoopId) return;
+  lastChemSpawn = 0;
+  lastChemFrameTime = 0;
+  chemLoopId = requestAnimationFrame(stepChemParticles);
+}
+
+function stopChemLoop() {
+  if (chemLoopId) cancelAnimationFrame(chemLoopId);
+  chemLoopId = null;
+  chemParts.forEach(p => p.el.parentNode && p.el.parentNode.removeChild(p.el));
+  chemParts.length = 0;
+}
+
+/* =========================================================================
+   MALE GAMETE PARTICLES
+   Once the guided tube reaches the micropyle, its tip ruptures and
+   releases the two sperm cells beside the egg apparatus. They drift with
+   a small Brownian jitter (random impulses, gently damped and pulled back
+   toward a home point) rather than following a fixed path. Clicking
+   either one toggles the "Double Fertilization" info card.
+========================================================================= */
+let gameteLoopId = null, gametesActive = false;
+const gametes = [
+  { homeX: 0, homeY: 0, x: 0, y: 0, vx: 0, vy: 0 },
+  { homeX: 0, homeY: 0, x: 0, y: 0, vx: 0, vy: 0 }
+];
+
+function initGametes() {
+  // Homes sit just beside the egg cell / polar nuclei, matching where
+  // ovaryAnatomyMarkup() draws those structures.
+  const eggCy = MICROPYLE_Y + 8;
+  gametes[0].homeX = MICROPYLE_X - 6; gametes[0].homeY = eggCy - 3;
+  gametes[1].homeX = MICROPYLE_X + 7; gametes[1].homeY = eggCy + 5;
+  gametes.forEach(g => { g.x = g.homeX; g.y = g.homeY; g.vx = 0; g.vy = 0; });
+}
+
+function stepGametes() {
+  if (!gametesActive) { gameteLoopId = null; return; }
+  let html = "";
+  gametes.forEach((g, i) => {
+    // Random impulse (Brownian), damping, and a weak pull back toward home
+    // so the pair stays put in the embryo sac rather than wandering off.
+    g.vx += (Math.random() - 0.5) * 0.55;
+    g.vy += (Math.random() - 0.5) * 0.55;
+    g.vx += (g.homeX - g.x) * 0.025;
+    g.vy += (g.homeY - g.y) * 0.025;
+    g.vx *= 0.92; g.vy *= 0.92;
+    g.x += g.vx; g.y += g.vy;
+    html += `<g class="gamete-particle" data-idx="${i}">
+      <circle cx="${g.x.toFixed(1)}" cy="${g.y.toFixed(1)}" r="8" fill="transparent"></circle>
+      <circle cx="${g.x.toFixed(1)}" cy="${g.y.toFixed(1)}" r="4.5" fill="rgba(224,192,255,0.28)"></circle>
+      <circle cx="${g.x.toFixed(1)}" cy="${g.y.toFixed(1)}" r="2.6" fill="#e0c0ff" stroke="rgba(140,80,180,0.7)" stroke-width="0.8"></circle>
+    </g>`;
+  });
+  document.getElementById("gameteParticles").innerHTML = html;
+  gameteLoopId = requestAnimationFrame(stepGametes);
+}
+
+function startGametes() {
+  document.getElementById("gameteCard").style.display = "";
+  if (gametesActive) return;
+  initGametes();
+  gametesActive = true;
+  gameteLoopId = requestAnimationFrame(stepGametes);
+}
+
+function stopGametes() {
+  gametesActive = false;
+  if (gameteLoopId) cancelAnimationFrame(gameteLoopId);
+  gameteLoopId = null;
+  document.getElementById("gameteParticles").innerHTML = "";
+  const card = document.getElementById("gameteCard");
+  card.style.display = "none";
+  card.setAttribute("data-expanded", "false");
+  document.getElementById("gameteCardToggle").setAttribute("aria-expanded", "false");
+}
+
+document.getElementById("gameteParticles").style.cursor = "pointer";
+document.getElementById("gameteParticles").addEventListener("click", (e) => {
+  if (!e.target.closest(".gamete-particle")) return;
+  const card = document.getElementById("gameteCard");
+  const expanded = card.getAttribute("data-expanded") === "true";
+  card.setAttribute("data-expanded", (!expanded).toString());
+  document.getElementById("gameteCardToggle").setAttribute("aria-expanded", (!expanded).toString());
+});
+
+document.getElementById("gameteCardToggle").addEventListener("click", () => {
+  const card = document.getElementById("gameteCard");
+  const expanded = card.getAttribute("data-expanded") === "true";
+  card.setAttribute("data-expanded", (!expanded).toString());
+  document.getElementById("gameteCardToggle").setAttribute("aria-expanded", (!expanded).toString());
+});
+
+document.getElementById("controlEndMarker").addEventListener("click", () => {
+  controlCalloutOpen = !controlCalloutOpen;
+  document.getElementById("controlEndCallout").setAttribute("opacity", controlCalloutOpen ? "1" : "0");
+});
+
+/* =========================================================================
+   MAGNIFIER
+========================================================================= */
+const MAG_TIP_THRESHOLD = 220;
+let magX = 150, magY = 150, magScale = 0.85, magDragging = false, magAnimId = null;
+let magOrganMatch = null, magMatchedPoint = null, lockedOrganKey = null;
+let magStimIntensity = 0;
+let magParticles = [];
+const MAG_PARTICLE_COUNT = 38;
+
+// Guided-tube route inside the lens, mirroring the main scene's fix: swipe
+// down just outside the outer integument ring (rx 118 / ry 143 / cy 10 —
+// matches the ellipse drawn in the magnifier markup), cut across below the
+// egg/synergid cluster (bottom edge ~126, so 128 clears it), then rise
+// straight up the micropyle canal into the egg apparatus. This keeps the
+// stylized tube outside the ovule until it's actually meant to enter it,
+// instead of cutting straight down through the middle the whole time.
+const MAG_OUTER_RX = 118, MAG_OUTER_RY = 143, MAG_OUTER_CY = 10;
+const MAG_CLEARANCE = 8;
+const MAG_SWIPE_START_Y = -132;
+const MAG_CUT_Y = 128;
+const MAG_RISE_END_Y = 78;
+function magSwipeX(y) {
+  const dy = y - MAG_OUTER_CY;
+  const halfW = Math.abs(dy) >= MAG_OUTER_RY ? 0 : MAG_OUTER_RX * Math.sqrt(1 - (dy / MAG_OUTER_RY) * (dy / MAG_OUTER_RY));
+  return -(halfW + MAG_CLEARANCE);
+}
+const MAG_SWIPE_LEN = MAG_CUT_Y - MAG_SWIPE_START_Y;
+const MAG_CUT_LEN = 0 - magSwipeX(MAG_CUT_Y);
+const MAG_RISE_LEN = MAG_CUT_Y - MAG_RISE_END_Y;
+const MAG_ROUTE_LEN = MAG_SWIPE_LEN + MAG_CUT_LEN + MAG_RISE_LEN;
+// Returns the tip position for how far along that route (t: 0..1) the
+// guided tube has grown, tagged with which leg it's currently on.
+function magGuidedTubePoint(t) {
+  const dist = Math.max(0, Math.min(1, t)) * MAG_ROUTE_LEN;
+  if (dist <= MAG_SWIPE_LEN) {
+    const y = MAG_SWIPE_START_Y + dist;
+    return { x: magSwipeX(y), y, leg: 1 };
+  }
+  if (dist <= MAG_SWIPE_LEN + MAG_CUT_LEN) {
+    return { x: magSwipeX(MAG_CUT_Y) + (dist - MAG_SWIPE_LEN), y: MAG_CUT_Y, leg: 2 };
+  }
+  return { x: 0, y: MAG_CUT_Y - (dist - MAG_SWIPE_LEN - MAG_CUT_LEN), leg: 3 };
+}
+
+function initMagParticles() {
+  const host = document.getElementById("magParticles");
+  host.innerHTML = "";
+  magParticles = [];
+  const NS = "http://www.w3.org/2000/svg";
+  for (let i = 0; i < MAG_PARTICLE_COUNT; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 0.3 + Math.random() * 0.7;
+    const el = document.createElementNS(NS, "circle");
+    // Mix of chemoattractant (gold) and calcium (white-blue) particles
+    const isCa = i % 4 === 0;
+    el.setAttribute("r", isCa ? "2.5" : "3.2");
+    el.setAttribute("fill", isCa ? "#b8e0ff" : "#ffd27a");
+    el.setAttribute("stroke", isCa ? "rgba(60,120,200,0.5)" : "rgba(120,70,10,0.6)");
+    el.setAttribute("stroke-width", "0.8");
+    host.appendChild(el);
+    magParticles.push({ x: Math.cos(a) * 60 * r, y: Math.sin(a) * 70 * r, vx: 0, vy: 0, el, isCa });
+  }
+}
+
+function clampMagPosition() {
+  const margin = 176 * magScale;
+  magX = Math.max(margin, Math.min(900 - margin, magX));
+  magY = Math.max(margin, Math.min(520 - margin, magY));
+}
+function positionMagnifier() {
+  document.getElementById("magnifier").setAttribute("transform", `translate(${magX.toFixed(1)}, ${magY.toFixed(1)}) scale(${magScale.toFixed(2)})`);
+}
+
+function updateMagLabel() {
+  const candidates = [
+    { key: "right", name: "Guided Pollen Tube Tip", point: () => tipPositions.right },
+    { key: "control", name: "Control Tube Tip", point: () => tipPositions.control },
+  ];
+  const labelEl = document.getElementById("magLabelText");
+
+  if (lockedOrganKey) {
+    const locked = candidates.find((c) => c.key === lockedOrganKey);
+    const p = locked && locked.point();
+    if (p) {
+      const d = Math.hypot(p.x - magX, p.y - magY);
+      if (d < MAG_TIP_THRESHOLD) {
+        labelEl.textContent = locked.name;
+        magOrganMatch = locked;
+        magMatchedPoint = p;
+        return;
+      }
+    }
+    lockedOrganKey = null;
+  }
+
+  let best = null, bestDist = Infinity, bestPoint = null;
+  candidates.forEach((c) => {
+    const p = c.point();
+    if (!p) return;
+    const d = Math.hypot(p.x - magX, p.y - magY);
+    if (d < bestDist) { bestDist = d; best = c; bestPoint = p; }
+  });
+  if (best && bestDist < MAG_TIP_THRESHOLD) {
+    labelEl.textContent = best.name;
+    magOrganMatch = best;
+    magMatchedPoint = bestPoint;
+    lockedOrganKey = best.key;
+  } else {
+    labelEl.textContent = "";
+    magOrganMatch = null;
+    magMatchedPoint = null;
+    lockedOrganKey = null;
+  }
+}
+
+function stepMagnifier() {
+  updateMagLabel();
+
+  const leaderEl = document.getElementById("magLeaderLine");
+  if (magOrganMatch && magMatchedPoint) {
+    leaderEl.setAttribute("x1", magX.toFixed(1));
+    leaderEl.setAttribute("y1", magY.toFixed(1));
+    leaderEl.setAttribute("x2", magMatchedPoint.x.toFixed(1));
+    leaderEl.setAttribute("y2", magMatchedPoint.y.toFixed(1));
+    leaderEl.setAttribute("opacity", "1");
+  } else {
+    leaderEl.setAttribute("opacity", "0");
+  }
+
+  // Which tip is actually under the lens right now — the label lock already tracks
+  // this via magOrganMatch.key, but the drawing below used to only branch on "right".
+  const lockedKey = magOrganMatch?.key || null;
+  const rightActive = lockedKey === "right" && state.germinated && tipPositions.right && state.hours > 0;
+  const controlActive = lockedKey === "control" && state.germinated && tipPositions.control && state.hours > 0;
+  if (rightActive) {
+    const distToMicro = Math.hypot(tipPositions.right.x - MICROPYLE_X, tipPositions.right.y - MICROPYLE_Y);
+    magStimIntensity = Math.max(0, Math.min(1, 1 - distToMicro / OVARY_H));
+  } else {
+    magStimIntensity = 0;
+  }
+
+  // Chemoattractant and calcium particles — bias toward micropyle (bottom of embryo sac)
+  // when stimulated; Ca²⁺ particles drift more toward the synergid position.
+  const targetY = 54 * magStimIntensity;
+  const springK = 0.025;
+  const JITTER = 0.45;
+  magParticles.forEach((p) => {
+    const biasY = p.isCa ? targetY * 0.7 : targetY;
+    p.vx += (Math.random() - 0.5) * JITTER - p.x * 0.012;
+    p.vy += (Math.random() - 0.5) * JITTER + (biasY - p.y) * springK;
+    p.vx *= 0.87; p.vy *= 0.87;
+    p.x += p.vx; p.y += p.vy;
+    const d = Math.hypot(p.x / 82, p.y / 95);
+    if (d > 0.96) { const s = 0.96 / d; p.x *= s; p.y *= s; p.vx *= -0.4; p.vy *= -0.4; }
+    p.el.setAttribute("cx", p.x.toFixed(1));
+    p.el.setAttribute("cy", p.y.toFixed(1));
+    // Fade non-Ca particles in/out with stim; Ca particles always faintly visible
+    const alpha = p.isCa ? (0.2 + magStimIntensity * 0.65) : (0.1 + magStimIntensity * 0.85);
+    p.el.setAttribute("opacity", alpha.toFixed(2));
+  });
+
+  // Attractant zone glow at micropyle/synergid region
+  const zoneEl = document.getElementById("magRedZone");
+  const zoneSize = 14 + 30 * magStimIntensity;
+  zoneEl.setAttribute("cx", "0");
+  zoneEl.setAttribute("cy", (targetY * 0.9).toFixed(1));
+  zoneEl.setAttribute("rx", zoneSize.toFixed(1));
+  zoneEl.setAttribute("ry", (zoneSize * 0.72).toFixed(1));
+  zoneEl.setAttribute("opacity", Math.min(1, magStimIntensity * 1.4 + 0.1).toFixed(2));
+
+  // Polar nuclei pulse with attractant intensity
+  const pnAlpha = 0.35 + magStimIntensity * 0.35;
+  document.getElementById("magPolarN1").setAttribute("opacity", pnAlpha.toFixed(2));
+  document.getElementById("magPolarN2").setAttribute("opacity", pnAlpha.toFixed(2));
+
+  // Tube tip inside magnifier — hidden until the locked tube actually exists.
+  // Guided tube: swipes down just outside the integument, cuts across below
+  // the cluster, then rises into the micropyle canal (magGuidedTubePoint) —
+  // control tube: stays straight and offset, passing the sac without curving
+  // in, matching its real path in the main scene, which misses the micropyle.
+  const tubeEl = document.getElementById("magTubeTip");
+  let tubeD = "";
+  let guidedTip = null;
+  if (rightActive) {
+    guidedTip = magGuidedTubePoint(magStimIntensity);
+    const swipeDist = Math.min(magStimIntensity * MAG_ROUTE_LEN, MAG_SWIPE_LEN);
+    const pts = [{ x: 0, y: MAG_SWIPE_START_Y }];
+    const swipeSamples = 5;
+    for (let i = 1; i <= swipeSamples; i++) {
+      const sy = MAG_SWIPE_START_Y + (swipeDist * i) / swipeSamples;
+      pts.push({ x: magSwipeX(sy), y: sy });
+    }
+    if (guidedTip.leg >= 2) pts.push({ x: guidedTip.leg === 2 ? guidedTip.x : 0, y: MAG_CUT_Y });
+    if (guidedTip.leg === 3) pts.push({ x: 0, y: guidedTip.y });
+    tubeD = pathD(pts);
+    tubeEl.setAttribute("stroke", "#f0923e");
+    tubeEl.setAttribute("stroke-width", "6");
+    tubeEl.setAttribute("stroke-dasharray", "");
+  } else if (controlActive) {
+    tubeD = `M -34 -132 L -34 55`;
+    tubeEl.setAttribute("stroke", "#a06cd5");
+    tubeEl.setAttribute("stroke-width", "5");
+    tubeEl.setAttribute("stroke-dasharray", "7 5");
+  }
+  tubeEl.setAttribute("d", tubeD);
+
+  // Vegetative nucleus + sperm cells only ride with the guided tube — the
+  // control tube never delivers gametes, so they stay hidden for it.
+  const nucleusEl = document.getElementById("magTubeNucleus");
+  const sperm1El = document.getElementById("magSperm1");
+  const sperm2El = document.getElementById("magSperm2");
+  if (rightActive) {
+    const nBack = 18;
+    // Trail the nucleus/sperm behind the tip along whichever axis that
+    // leg is currently moving on, so they never sit ahead of the tip.
+    const behind = guidedTip.leg === 1 ? { x: guidedTip.x, y: guidedTip.y - nBack }
+      : guidedTip.leg === 2 ? { x: guidedTip.x - nBack, y: guidedTip.y }
+      : { x: guidedTip.x, y: guidedTip.y + nBack };
+    nucleusEl.setAttribute("cx", behind.x.toFixed(1));
+    nucleusEl.setAttribute("cy", behind.y.toFixed(1));
+    nucleusEl.setAttribute("opacity", "1");
+    // Two sperm cells just behind the nucleus
+    sperm1El.setAttribute("cx", (behind.x - 5).toFixed(1));
+    sperm1El.setAttribute("cy", (behind.y - 4).toFixed(1));
+    sperm1El.setAttribute("opacity", "0.85");
+    sperm2El.setAttribute("cx", (behind.x + 5).toFixed(1));
+    sperm2El.setAttribute("cy", (behind.y - 8).toFixed(1));
+    sperm2El.setAttribute("opacity", "0.85");
+  } else {
+    nucleusEl.setAttribute("opacity", "0");
+    sperm1El.setAttribute("opacity", "0");
+    sperm2El.setAttribute("opacity", "0");
+  }
+
+  positionMagnifier();
+  magAnimId = requestAnimationFrame(stepMagnifier);
+}
+
+function setMagnifier(on) {
+  state.magnifierOn = on;
+  const mag = document.getElementById("magnifier");
+  document.getElementById("magBtn").classList.toggle("active", on);
+  document.getElementById("magBtn").title = on ? "Hide Magnifier" : "Show Magnifier";
+  if (on) {
+    mag.style.display = "block";
+    requestAnimationFrame(() => mag.setAttribute("opacity", "1"));
+    if (magAnimId) cancelAnimationFrame(magAnimId);
+    magAnimId = requestAnimationFrame(stepMagnifier);
+  } else {
+    mag.setAttribute("opacity", "0");
+    if (magAnimId) cancelAnimationFrame(magAnimId);
+    setTimeout(() => { if (!state.magnifierOn) mag.style.display = "none"; }, 300);
+  }
+}
+
+function setMagScale(delta) {
+  magScale = Math.max(0.5, Math.min(1.3, magScale + delta));
+  clampMagPosition();
+  positionMagnifier();
+}
+
+function toPointIn(svgId, evt) {
+  const svg = document.getElementById(svgId);
+  const pt = svg.createSVGPoint();
+  pt.x = evt.clientX;
+  pt.y = evt.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+(function setupMagDrag() {
+  const mag = document.getElementById("magnifier");
+  mag.addEventListener("pointerdown", (e) => {
+    magDragging = true;
+    mag.classList.add("dragging");
+    mag.setPointerCapture(e.pointerId);
+  });
+  mag.addEventListener("pointermove", (e) => {
+    if (!magDragging) return;
+    const p = toPointIn("sceneSvg", e);
+    magX = p.x; magY = p.y;
+    clampMagPosition();
+    positionMagnifier();
+  });
+  mag.addEventListener("pointerup", (e) => {
+    magDragging = false;
+    mag.classList.remove("dragging");
+    mag.releasePointerCapture(e.pointerId);
+  });
+})();
+
+positionMagnifier();
+initMagParticles();
+
+/* =========================================================================
+   CONTROLS
+========================================================================= */
+document.getElementById("hoursSlider").addEventListener("input", (e) => {
+  stopPlay();
+  state.hours = parseFloat(e.target.value);
+  render();
+});
+
+function stopPlay() {
+  state.playing = false;
+  if (playAnimId) cancelAnimationFrame(playAnimId);
+  document.getElementById("playBtn").innerHTML = `<svg class="mini-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`;
+}
+
+// Real-time pacing for the Play button, kept the same as the original
+// 48h-in-20s rate so a larger MAX_HOURS doesn't compress playback into
+// an unreadably fast blur — a full 0→250h play now takes ~104s instead.
+const PLAY_HOURS_PER_MS = 48 / 20000;
+
+function playFrame(now) {
+  const elapsed = now - playStart;
+  state.hours = Math.min(MAX_HOURS, startHours + elapsed * PLAY_HOURS_PER_MS);
+  document.getElementById("hoursSlider").value = state.hours;
+  render();
+  if (state.hours >= MAX_HOURS) { stopPlay(); return; }
+  playAnimId = requestAnimationFrame(playFrame);
+}
+
+document.getElementById("playBtn").addEventListener("click", () => {
+  if (state.playing) { stopPlay(); return; }
+  state.playing = true;
+  startHours = state.hours;
+  playStart = performance.now();
+  document.getElementById("playBtn").innerHTML = `<svg class="mini-icon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"></rect><rect x="14" y="5" width="4" height="14"></rect></svg>`;
+  playAnimId = requestAnimationFrame(playFrame);
+});
+
+/* =========================================================================
+   POLLINATION ANIMATION
+========================================================================= */
+let pollinating = false;
+let abortPollination = null;
+
+function spawnWindStreak(midX, midY, spanX) {
+  const host = document.getElementById("windStreaks");
+  const NS = "http://www.w3.org/2000/svg";
+  const y = midY + (Math.random() - 0.5) * 90;
+  const len = 34 + Math.random() * 30;
+  const x1 = midX - spanX * 0.5 + Math.random() * spanX * 0.5;
+  const bow = (Math.random() - 0.5) * 14;
+  const el = document.createElementNS(NS, "path");
+  el.setAttribute("d", `M ${x1.toFixed(1)} ${y.toFixed(1)} Q ${(x1 + len / 2).toFixed(1)} ${(y + bow).toFixed(1)} ${(x1 + len).toFixed(1)} ${y.toFixed(1)}`);
+  el.setAttribute("fill", "none");
+  el.setAttribute("stroke", "rgba(255,255,255,0.35)");
+  el.setAttribute("stroke-width", "1.4");
+  el.setAttribute("stroke-linecap", "round");
+  el.setAttribute("opacity", "0");
+  host.appendChild(el);
+
+  const dur = 700 + Math.random() * 300;
+  const drift = 26 + Math.random() * 18;
+  const t0 = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - t0) / dur);
+    const fadeOpacity = t < 0.25 ? t / 0.25 : t > 0.7 ? (1 - t) / 0.3 : 1;
+    el.setAttribute("opacity", (fadeOpacity * 0.5).toFixed(2));
+    el.setAttribute("transform", `translate(${(drift * t).toFixed(1)}, 0)`);
+    if (t < 1) { requestAnimationFrame(step); }
+    else if (el.parentNode) { el.parentNode.removeChild(el); }
+  }
+  requestAnimationFrame(step);
+}
+
+function playPollinationAnim(onDone) {
+  if (pollinating) return;
+  pollinating = true;
+  let aborted = false;
+  const host = document.getElementById("pollenTravel");
+  const trailEl = document.getElementById("pollenTrail");
+  const NS = "http://www.w3.org/2000/svg";
+
+  // Main grain
+  const grain = document.createElementNS(NS, "circle");
+  grain.setAttribute("r", "5");
+  grain.setAttribute("fill", "#f4c95d");
+  grain.setAttribute("stroke", "rgba(120,80,10,0.6)");
+  grain.setAttribute("stroke-width", "1");
+  host.appendChild(grain);
+
+  // A couple of companion grains tumbling along nearby
+  const companions = [[6, -8, 3.2], [-5, 10, 2.6]].map(([ox, oy, r]) => {
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("r", r.toString());
+    c.setAttribute("fill", "#e8b840");
+    c.setAttribute("stroke", "rgba(100,70,10,0.5)");
+    c.setAttribute("stroke-width", "0.7");
+    c.setAttribute("opacity", "0.7");
+    host.appendChild(c);
+    return { el: c, ox, oy };
+  });
+
+  // Reset (or any other interruption) can cancel this flight in progress —
+  // clean up the DOM immediately and skip onDone so a stale completion
+  // can't silently re-pollinate the flower after the state was reset.
+  abortPollination = () => {
+    aborted = true;
+    companions.forEach(c => c.el.parentNode && host.removeChild(c.el));
+    if (grain.parentNode) host.removeChild(grain);
+    trailEl.setAttribute("opacity", "0");
+    pollinating = false;
+    abortPollination = null;
+  };
+
+  const stigmaCy = STIGMA_TOP_Y + STIGMA_H * 0.35;
+  const P0 = { x: ANTHER_X, y: ANTHER_Y };
+  const P2 = { x: rightX - 4, y: stigmaCy - 6 }; // land on stigma grain position
+  const P1 = { x: (P0.x + P2.x) / 2, y: Math.min(P0.y, P2.y) - 80 };
+  const duration = 3400;
+  const t0 = performance.now();
+  let lastWindSpawn = t0;
+  const WIND_SPAWN_INTERVAL = 260;
+
+  function bezierPoint(T) {
+    const mt = 1 - T;
+    return { x: mt*mt*P0.x + 2*mt*T*P1.x + T*T*P2.x, y: mt*mt*P0.y + 2*mt*T*P1.y + T*T*P2.y };
+  }
+
+  function step(now) {
+    if (aborted) return;
+    const t = Math.min(1, (now - t0) / duration);
+    const e = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+    const pos = bezierPoint(e);
+    grain.setAttribute("cx", pos.x.toFixed(1));
+    grain.setAttribute("cy", pos.y.toFixed(1));
+
+    // Companion grains trail slightly behind
+    companions.forEach((c, i) => {
+      const et = Math.max(0, e - 0.04 * (i + 1));
+      const cp = bezierPoint(Math.min(1, et));
+      const wobble = Math.sin((now - t0) * 0.005 + i * 2) * 3;
+      c.el.setAttribute("cx", (cp.x + c.ox + wobble).toFixed(1));
+      c.el.setAttribute("cy", (cp.y + c.oy).toFixed(1));
+    });
+
+    const Q1 = { x: P0.x + (P1.x - P0.x) * e, y: P0.y + (P1.y - P0.y) * e };
+    trailEl.setAttribute("d", `M ${P0.x.toFixed(1)} ${P0.y.toFixed(1)} Q ${Q1.x.toFixed(1)} ${Q1.y.toFixed(1)} ${pos.x.toFixed(1)} ${pos.y.toFixed(1)}`);
+    trailEl.setAttribute("opacity", "1");
+
+    if (now - lastWindSpawn >= WIND_SPAWN_INTERVAL && t < 1) {
+      spawnWindStreak((P0.x + P2.x) / 2, (P0.y + P2.y) / 2 - 40, Math.abs(P2.x - P0.x) * 0.7);
+      lastWindSpawn = now;
+    }
+
+    if (t < 1) {
+      requestAnimationFrame(step);
+    } else {
+      companions.forEach(c => host.removeChild(c.el));
+      host.removeChild(grain);
+      trailEl.setAttribute("opacity", "0");
+      pollinating = false;
+      abortPollination = null;
+      onDone();
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+document.getElementById("pollinateBtn").addEventListener("click", (e) => {
+  if (pollinating || state.pollinated) return;
+  playPollinationAnim(() => {
+    state.pollinated = true;
+    state.hours = 0;
+    document.getElementById("hoursSlider").value = 0;
+    // The synergids visibly begin releasing signal (the LURE/Ca²⁺ particle
+    // animation) as soon as the grain lands. This is illustrative only —
+    // it no longer affects how far either tube grows (both grow at the
+    // same rate) or whether the guided tube curves in (that's determined
+    // by which flower it is, not by this flag).
+    if (!state.chemRelease) {
+      state.chemRelease = true;
+      document.getElementById("releaseChemBtn").classList.add("chem-active");
+      startChemLoop();
+    }
+    render();
+  });
+  const btn = e.currentTarget;
+  btn.classList.remove("pulse");
+  void btn.offsetWidth;
+  btn.classList.add("pulse");
+  btn.addEventListener("animationend", () => btn.classList.remove("pulse"), { once: true });
+});
+
+document.getElementById("germinateBtn").addEventListener("click", (e) => {
+  if (!state.pollinated || state.germinated) return;
+  state.germinated = true;
+  startWaveLoop();
+  render();
+  const btn = e.currentTarget;
+  btn.classList.remove("pulse");
+  void btn.offsetWidth;
+  btn.classList.add("pulse");
+  btn.addEventListener("animationend", () => btn.classList.remove("pulse"), { once: true });
+});
+
+document.getElementById("resetBtn").addEventListener("click", (e) => {
+  stopPlay();
+  stopWaveLoop();
+  if (abortPollination) abortPollination();
+  state.hours = 0;
+  state.pollinated = false;
+  state.germinated = false;
+  state.ovuleDetected = false;
+  state.fertilized = false;
+  stopGametes();
+  document.getElementById("hoursSlider").value = 0;
+  lockedOrganKey = null;
+  magOrganMatch = null;
+  magMatchedPoint = null;
+  document.getElementById("magLeaderLine").setAttribute("opacity", "0");
+  document.getElementById("magLabelText").textContent = "";
+  document.getElementById("expCard").classList.remove("ovule-detected");
+  document.getElementById("tubeWaves").innerHTML = "";
+  controlCalloutOpen = false;
+  document.getElementById("controlEndCallout").setAttribute("opacity", "0");
+  // Stop and clear chemical particles
+  state.chemRelease = false;
+  stopChemLoop();
+  document.getElementById("releaseChemBtn").classList.remove("chem-active");
+  setMagnifier(false);
+  render();
+  const btn = e.currentTarget;
+  btn.classList.remove("pulse");
+  void btn.offsetWidth;
+  btn.classList.add("pulse");
+  btn.addEventListener("animationend", () => btn.classList.remove("pulse"), { once: true });
+});
+
+document.getElementById("releaseChemBtn").addEventListener("click", () => {
+  state.chemRelease = !state.chemRelease;
+  document.getElementById("releaseChemBtn").classList.toggle("chem-active", state.chemRelease);
+  if (state.chemRelease) startChemLoop();
+});
+
+document.getElementById("magBtn").addEventListener("click", () => setMagnifier(!state.magnifierOn));
+document.getElementById("magScaleDownBtn").addEventListener("click", () => setMagScale(-0.15));
+document.getElementById("magScaleUpBtn").addEventListener("click", () => setMagScale(0.15));
+
+document.getElementById("mechanismCardToggle").addEventListener("click", () => {
+  const card = document.getElementById("mechanismCard");
+  const expanded = card.getAttribute("data-expanded") === "true";
+  card.setAttribute("data-expanded", (!expanded).toString());
+  document.getElementById("mechanismCardToggle").setAttribute("aria-expanded", (!expanded).toString());
+});
+</script>
+</body>
+</html>
