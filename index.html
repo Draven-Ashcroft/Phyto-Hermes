@@ -107,7 +107,7 @@
   .info-card-body p:last-child { margin-bottom: 0; }
   .info-card-body strong { color: rgba(255,255,255,0.85); font-weight: 600; }
   @media (prefers-reduced-motion: reduce) {
-    .info-card-arrow, .info-card-panel, .info-card-header, #magnifier, #magLeaderLine, #controlEndMarker, #controlEndCallout { transition: none; }
+    .info-card-arrow, .info-card-panel, .info-card-header, #magnifier, #magLeaderLine, #controlEndMarker, #controlEndCallout, #micropyleMarker, #micropyleCallout, #magMicropyleMarker, #magMicropyleCallout { transition: none; }
   }
   #magnifier { transition: opacity .3s ease; cursor: grab; touch-action: none; }
   #magnifier.dragging { cursor: grabbing; }
@@ -115,6 +115,9 @@
   #controlEndMarker { transition: opacity .3s ease; }
   #controlEndMarker:hover circle { fill: rgba(160,108,213,0.32); }
   #controlEndCallout { transition: opacity .25s ease; }
+  #micropyleMarker, #magMicropyleMarker { transition: opacity .3s ease; cursor: pointer; }
+  #micropyleMarker:hover ellipse:first-child, #magMicropyleMarker:hover ellipse:first-child { stroke-opacity: 1; }
+  #micropyleCallout, #magMicropyleCallout { transition: opacity .25s ease; }
 
   /* Germinate button — disabled until pollen has landed */
   .icon-btn:disabled { opacity: 0.32; cursor: not-allowed; pointer-events: none; }
@@ -292,6 +295,21 @@
         <text x="0" y="-21" text-anchor="middle" font-size="11" font-weight="600" fill="#c295e8">No chemicals to guide for fertilisation</text>
       </g>
 
+      <!-- Clickable micropyle aperture, with a self-dismissing info card.
+           Positioned every render() call (see render()); a static element
+           here (rather than embedded in ovaryAnatomyMarkup's regenerated
+           markup) so it always paints on top of the tube layers instead of
+           getting covered once a tube tip reaches this point. -->
+      <g id="micropyleMarker" style="cursor:pointer;" onclick="showMicropyleCard('main')">
+        <ellipse rx="9" ry="5.5" fill="rgba(20,16,4,0.6)" stroke="rgba(255,210,80,0.75)" stroke-width="1.3"></ellipse>
+        <ellipse rx="4" ry="2.2" fill="rgba(255,220,120,0.4)"></ellipse>
+      </g>
+      <g id="micropyleCallout" opacity="0" style="pointer-events:none;">
+        <rect x="-95" y="-46" width="190" height="34" rx="8" fill="rgba(10,11,14,0.94)" stroke="rgba(255,210,80,0.5)" stroke-width="1"></rect>
+        <text x="0" y="-31" text-anchor="middle" font-size="10.5" font-weight="600" fill="#ffd875">Micropyle</text>
+        <text x="0" y="-19" text-anchor="middle" font-size="9" fill="rgba(255,216,117,0.8)">Opening where the pollen tube enters to fertilise</text>
+      </g>
+
       <text x="240" y="495" text-anchor="middle" font-size="13" font-weight="600" fill="white">Left Flower</text>
       <text x="240" y="511" text-anchor="middle" font-size="11" fill="rgba(255,255,255,0.5)">(Stamen — pollen source)</text>
       <text x="660" y="495" text-anchor="middle" font-size="13" font-weight="600" fill="white">Right Flower</text>
@@ -334,8 +352,6 @@
               <ellipse cx="-18" cy="-90" rx="14" ry="18" fill="rgba(180,220,160,0.4)" stroke="rgba(150,200,120,0.3)" stroke-width="1"></ellipse>
               <ellipse cx="0" cy="-100" rx="14" ry="18" fill="rgba(180,220,160,0.4)" stroke="rgba(150,200,120,0.3)" stroke-width="1"></ellipse>
               <ellipse cx="18" cy="-90" rx="14" ry="18" fill="rgba(180,220,160,0.4)" stroke="rgba(150,200,120,0.3)" stroke-width="1"></ellipse>
-              <!-- Micropyle opening label -->
-              <text x="0" y="128" text-anchor="middle" font-size="8" fill="rgba(255,210,80,0.7)" font-style="italic">micropyle</text>
               <!-- Chemoattractant zone -->
               <ellipse id="magRedZone" cx="0" cy="0" rx="0" ry="0" fill="url(#attractantGlow)"></ellipse>
               <!-- Floating chemoattractant particles -->
@@ -345,8 +361,21 @@
               <!-- Tube tip nucleus (vegetative nucleus) -->
               <circle id="magTubeNucleus" r="3.2" fill="#c9a6e0" opacity="0"></circle>
               <!-- Sperm cells just behind the tip -->
-              <circle id="magSperm1" r="2.4" fill="#e0c0ff" opacity="0"></circle>
-              <circle id="magSperm2" r="2.4" fill="#e0c0ff" opacity="0"></circle>
+              <circle id="magSperm1" r="2.2" fill="#e0c0ff" opacity="0"></circle>
+              <circle id="magSperm2" r="2.2" fill="#e0c0ff" opacity="0"></circle>
+              <!-- Micropyle opening — clickable aperture instead of a plain
+                   label, since the tube tip lands right on top of it. Placed
+                   after the tube/particle layers so it always stays on top
+                   and clickable rather than getting painted over by them. -->
+              <g id="magMicropyleMarker" transform="translate(0, 128)" style="cursor:pointer;">
+                <ellipse rx="9" ry="5.5" fill="rgba(20,16,4,0.6)" stroke="rgba(255,210,80,0.75)" stroke-width="1.3"></ellipse>
+                <ellipse rx="4" ry="2.2" fill="rgba(255,220,120,0.4)"></ellipse>
+              </g>
+              <g id="magMicropyleCallout" transform="translate(0, 128)" opacity="0" style="pointer-events:none;">
+                <rect x="-85" y="-40" width="170" height="34" rx="8" fill="rgba(10,11,14,0.94)" stroke="rgba(255,210,80,0.5)" stroke-width="1"></rect>
+                <text x="0" y="-25" text-anchor="middle" font-size="10.5" font-weight="600" fill="#ffd875">Micropyle</text>
+                <text x="0" y="-13" text-anchor="middle" font-size="9" fill="rgba(255,216,117,0.8)">Opening where the pollen tube enters to fertilise</text>
+              </g>
             </g>
           </g>
           <circle r="156" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="4"></circle>
@@ -364,7 +393,7 @@
     <button class="icon-btn" id="pollinateBtn" title="Release Pollen Grain — drifts onto the stigma">
       <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="5"></line><line x1="12" y1="19" x2="12" y2="22"></line><line x1="4.2" y1="4.2" x2="6.3" y2="6.3"></line><line x1="17.7" y1="17.7" x2="19.8" y2="19.8"></line><line x1="2" y1="12" x2="5" y2="12"></line><line x1="19" y1="12" x2="22" y2="12"></line><line x1="4.2" y1="19.8" x2="6.3" y2="17.7"></line><line x1="17.7" y1="6.3" x2="19.8" y2="4.2"></line></svg>
     </button>
-    <button class="icon-btn" id="germinateBtn" title="Initiate Germination — activates pollen tube growth" disabled>
+    <button class="icon-btn" id="germinateBtn" title="Initiate Germination — release the chemical signal (3rd button) first" disabled>
       <!-- Seedling/sprout icon -->
       <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 22V12"></path>
@@ -381,9 +410,6 @@
     </button>
     <button class="icon-btn" id="magBtn" title="Show Magnifier">
       <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-    </button>
-    <button class="icon-btn" id="playBtn" title="Play">
-      <svg class="mini-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
     </button>
     <button class="icon-btn" id="resetBtn" title="Reset">
       <svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"></path><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
@@ -472,6 +498,8 @@ const TUBE_RATE = 8.6; // px/hour — guided tube reaches micropyle ~h45
 const state = { hours: 0, playing: false, magnifierOn: false, pollinated: false, germinated: false, ovuleDetected: false, chemRelease: false, fertilized: false };
 let playAnimId = null, playStart = 0, startHours = 0;
 let controlCalloutOpen = false; // toggled by clicking the "?" marker at the control tube's end
+let micropyleCardOpen = false, micropyleCardTimer = null; // main-scene micropyle aperture card, auto-dismisses after 5s
+let magMicropyleCardOpen = false, magMicropyleCardTimer = null; // magnifier's own copy of the same
 
 /* =========================================================================
    TUBE PATH
@@ -558,8 +586,18 @@ function buildTubePath({ originX, originY, hours, guided }) {
   // *direction* differs (see the phase logic below); the control tube
   // grows exactly as far, it just never curves in.
   const totalLen = Math.max(0, TUBE_RATE * hours);
+  // The control tube travels in a straight line, so its stopping point is a
+  // fixed distance from its origin — clip the growth length to that distance
+  // up front. Previously the fixed 90-step loop would keep growing past the
+  // boundary and then break on the first step that crossed it; because each
+  // step's length (segLen) scales with hours, that overshoot amount changed
+  // unpredictably frame to frame, making the tip visibly bounce back and
+  // forth right where it hits the ovary instead of settling. Clipping first
+  // means the tip eases up to the boundary and then sits there exactly.
+  const CONTROL_MAX_LEN = (OVARY_TOP_Y + OVARY_H * 0.88) - originY;
+  const effectiveLen = guided ? totalLen : Math.min(totalLen, CONTROL_MAX_LEN);
   const steps = 90;
-  const segLen = totalLen / steps;
+  const segLen = effectiveLen / steps;
   let x = originX, y = originY;
   // phase 1 = hugging the outer margin down past the ovule, 2 = cutting
   // back toward the micropyle's x below the cluster, 3 = rising straight
@@ -720,13 +758,10 @@ function ovaryAnatomyMarkup(cx, stimIntensity) {
     <circle cx="${microX.toFixed(1)}" cy="${(eggCy-2).toFixed(1)}" r="4"
       fill="rgba(200,235,255,0.7)" stroke="rgba(100,180,240,0.4)" stroke-width="0.7"></circle>
 
-    <!-- Micropyle opening marker -->
-    <line x1="${(microX-8).toFixed(1)}" y1="${(microY+20).toFixed(1)}"
-          x2="${(microX+8).toFixed(1)}" y2="${(microY+20).toFixed(1)}"
-      stroke="rgba(255,220,80,0.45)" stroke-width="1.5" stroke-linecap="round"></line>
-    <text x="${microX.toFixed(1)}" y="${(microY+30).toFixed(1)}"
-      text-anchor="middle" font-size="8" fill="rgba(255,220,80,${(0.4 + labelAlpha*0.4).toFixed(2)})"
-      font-style="italic">micropyle</text>
+    <!-- Micropyle opening — clickable aperture; the marker itself lives as a
+         static top-level element (see near controlEndMarker) so it always
+         paints on top of the tube layers instead of getting covered by
+         them once a tube reaches this point. -->
 
     <!-- Chemoattractant concentration label (fades in as stim grows) -->
     <text x="${(microX+28).toFixed(1)}" y="${(microY-10).toFixed(1)}"
@@ -920,8 +955,8 @@ function render() {
   // Draw control tube (purple, dashed) — grows straight, misses micropyle
   let controlHtml = "";
   if (germinated && effectiveHours > 0) {
-    controlHtml += `<path d="${pathD(controlPts)}" fill="none" stroke="#a06cd5" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 3" opacity="0.8"></path>`;
-    controlHtml += `<circle cx="${controlTip.x.toFixed(1)}" cy="${controlTip.y.toFixed(1)}" r="3.5" fill="#9358c9" opacity="0.85"></circle>`;
+    controlHtml += `<path d="${pathD(controlPts)}" fill="none" stroke="#a06cd5" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 3" opacity="0.9"></path>`;
+    controlHtml += `<circle cx="${controlTip.x.toFixed(1)}" cy="${controlTip.y.toFixed(1)}" r="2.5" fill="#a06cd5" stroke="rgba(70,30,110,0.6)" stroke-width="1" opacity="1"></circle>`;
   }
   document.getElementById("controlTubeLayer").innerHTML = controlHtml;
 
@@ -959,9 +994,19 @@ function render() {
   }
   calloutEl.setAttribute("opacity", controlEndVisible && controlCalloutOpen ? "1" : "0");
 
-  // Germinate button — enable only when pollinated and not yet germinated
+  // Micropyle aperture marker + its self-dismissing info card. The
+  // micropyle is a fixed anatomical feature (always there, pollinated or
+  // not), so unlike the control-end marker it's shown unconditionally.
+  const microT = `translate(${MICROPYLE_X.toFixed(1)}, ${(MICROPYLE_Y + 20).toFixed(1)})`;
+  document.getElementById("micropyleMarker").setAttribute("transform", microT);
+  const microCalloutEl = document.getElementById("micropyleCallout");
+  microCalloutEl.setAttribute("transform", microT);
+  microCalloutEl.setAttribute("opacity", micropyleCardOpen ? "1" : "0");
+
+  // Germinate button — enable only once pollinated, the chemical signal has
+  // been released (via the 3rd button), and germination hasn't happened yet
   const germinateBtn = document.getElementById("germinateBtn");
-  if (!pollinated || germinated) {
+  if (!pollinated || !state.chemRelease || germinated) {
     germinateBtn.disabled = true;
     germinateBtn.classList.remove("germ-ready");
   } else {
@@ -986,7 +1031,9 @@ function render() {
   document.getElementById("controlStat").textContent = !pollinated
     ? "Waiting for pollination. A control tube will grow through the style and into the ovary at the same rate as the guided tube — but with no directional guidance, it can't home in on the micropyle."
     : !germinated
-      ? "Pollen grain on stigma. Press Germinate to initiate tube growth."
+      ? (!state.chemRelease
+          ? "Pollen grain on stigma. Release the chemical signal to enable germination."
+          : "Pollen grain on stigma. Press Germinate to initiate tube growth.")
       : effectiveHours < 4
         ? "Germinating on stigma surface. Tube entering the style."
         : controlTip.y >= OVARY_TOP_Y
@@ -1297,11 +1344,38 @@ document.getElementById("controlEndMarker").addEventListener("click", () => {
   document.getElementById("controlEndCallout").setAttribute("opacity", controlCalloutOpen ? "1" : "0");
 });
 
+// Micropyle aperture markers (main scene + magnifier) — clicking either shows
+// a small info card that auto-dismisses itself after 5 seconds, rather than
+// the old always-on label that used to sit right where the tube tips and
+// their end-markers land and end up hidden underneath them.
+function showMicropyleCard(which) {
+  if (which === "main") {
+    micropyleCardOpen = true;
+    if (micropyleCardTimer) clearTimeout(micropyleCardTimer);
+    micropyleCardTimer = setTimeout(() => {
+      micropyleCardOpen = false;
+      micropyleCardTimer = null;
+      render();
+    }, 5000);
+    render();
+  } else {
+    magMicropyleCardOpen = true;
+    document.getElementById("magMicropyleCallout").setAttribute("opacity", "1");
+    if (magMicropyleCardTimer) clearTimeout(magMicropyleCardTimer);
+    magMicropyleCardTimer = setTimeout(() => {
+      magMicropyleCardOpen = false;
+      magMicropyleCardTimer = null;
+      document.getElementById("magMicropyleCallout").setAttribute("opacity", "0");
+    }, 5000);
+  }
+}
+document.getElementById("magMicropyleMarker").addEventListener("click", () => showMicropyleCard("mag"));
+
 /* =========================================================================
    MAGNIFIER
 ========================================================================= */
 const MAG_TIP_THRESHOLD = 220;
-let magX = 150, magY = 150, magScale = 0.85, magDragging = false, magAnimId = null;
+let magX = 150, magY = 150, magScale = 0.68, magDragging = false, magAnimId = null;
 let magOrganMatch = null, magMatchedPoint = null, lockedOrganKey = null;
 let magStimIntensity = 0;
 let magParticles = [];
@@ -1378,21 +1452,7 @@ function updateMagLabel() {
   ];
   const labelEl = document.getElementById("magLabelText");
 
-  if (lockedOrganKey) {
-    const locked = candidates.find((c) => c.key === lockedOrganKey);
-    const p = locked && locked.point();
-    if (p) {
-      const d = Math.hypot(p.x - magX, p.y - magY);
-      if (d < MAG_TIP_THRESHOLD) {
-        labelEl.textContent = locked.name;
-        magOrganMatch = locked;
-        magMatchedPoint = p;
-        return;
-      }
-    }
-    lockedOrganKey = null;
-  }
-
+  // Find whichever candidate is genuinely closest to the lens right now.
   let best = null, bestDist = Infinity, bestPoint = null;
   candidates.forEach((c) => {
     const p = c.point();
@@ -1400,6 +1460,29 @@ function updateMagLabel() {
     const d = Math.hypot(p.x - magX, p.y - magY);
     if (d < bestDist) { bestDist = d; best = c; bestPoint = p; }
   });
+
+  // Sticky hysteresis: if the lens is still hovering close to the *previously*
+  // locked tip, keep showing that one rather than the true closest — this is
+  // what damps label flicker from sub-pixel jitter when the lens sits near the
+  // midpoint between the two tips. The margin is deliberately small (well under
+  // how far apart the two tips actually are for most of the simulation) so it
+  // only smooths genuine jitter — it never lets the lock survive once the lens
+  // has actually been moved onto the other tip.
+  const STICKY_MARGIN = 10;
+  if (lockedOrganKey && lockedOrganKey !== best?.key) {
+    const locked = candidates.find((c) => c.key === lockedOrganKey);
+    const p = locked && locked.point();
+    if (p) {
+      const d = Math.hypot(p.x - magX, p.y - magY);
+      if (d < MAG_TIP_THRESHOLD && d <= bestDist + STICKY_MARGIN) {
+        labelEl.textContent = locked.name;
+        magOrganMatch = locked;
+        magMatchedPoint = p;
+        return;
+      }
+    }
+  }
+
   if (best && bestDist < MAG_TIP_THRESHOLD) {
     labelEl.textContent = best.name;
     magOrganMatch = best;
@@ -1494,7 +1577,7 @@ function stepMagnifier() {
     if (guidedTip.leg === 3) pts.push({ x: 0, y: guidedTip.y });
     tubeD = pathD(pts);
     tubeEl.setAttribute("stroke", "#f0923e");
-    tubeEl.setAttribute("stroke-width", "6");
+    tubeEl.setAttribute("stroke-width", "9");
     tubeEl.setAttribute("stroke-dasharray", "");
   } else if (controlActive) {
     tubeD = `M -34 -132 L -34 55`;
@@ -1510,22 +1593,52 @@ function stepMagnifier() {
   const sperm1El = document.getElementById("magSperm1");
   const sperm2El = document.getElementById("magSperm2");
   if (rightActive) {
-    const nBack = 18;
-    // Trail the nucleus/sperm behind the tip along whichever axis that
-    // leg is currently moving on, so they never sit ahead of the tip.
-    const behind = guidedTip.leg === 1 ? { x: guidedTip.x, y: guidedTip.y - nBack }
-      : guidedTip.leg === 2 ? { x: guidedTip.x - nBack, y: guidedTip.y }
-      : { x: guidedTip.x, y: guidedTip.y + nBack };
-    nucleusEl.setAttribute("cx", behind.x.toFixed(1));
-    nucleusEl.setAttribute("cy", behind.y.toFixed(1));
-    nucleusEl.setAttribute("opacity", "1");
-    // Two sperm cells just behind the nucleus
-    sperm1El.setAttribute("cx", (behind.x - 5).toFixed(1));
-    sperm1El.setAttribute("cy", (behind.y - 4).toFixed(1));
-    sperm1El.setAttribute("opacity", "0.85");
-    sperm2El.setAttribute("cx", (behind.x + 5).toFixed(1));
-    sperm2El.setAttribute("cy", (behind.y - 8).toFixed(1));
-    sperm2El.setAttribute("opacity", "0.85");
+    // Walk backward along the same route-distance parameterization used to
+    // draw the tube itself, so the cargo sits exactly on the curve (including
+    // through the curved leg-1 swipe) rather than approximating "behind" with
+    // a fixed x/y offset that only holds true on straight segments.
+    const dist = Math.max(0, Math.min(1, magStimIntensity)) * MAG_ROUTE_LEN;
+    const pointAtBack = (back) => magGuidedTubePoint(Math.max(0, dist - back) / MAG_ROUTE_LEN);
+
+    // The route's leg 2 (t >= cargoFadeEndT) runs straight across right at
+    // the synergid/egg/"micropyle" label cluster, and leg 3 rises right past
+    // it too — there's no repositioning that avoids it, since that's the
+    // actual biological destination. Rather than stack the nucleus + sperm
+    // circles on top of an already-detailed icon cluster there, fade the
+    // cargo out just before it, as if already delivered.
+    const cargoFadeEndT = MAG_SWIPE_LEN / MAG_ROUTE_LEN;
+    const cargoFadeStartT = cargoFadeEndT - 0.12;
+    const t = Math.max(0, Math.min(1, magStimIntensity));
+    const cargoOpacity = t <= cargoFadeStartT ? 1
+      : t >= cargoFadeEndT ? 0
+      : 1 - (t - cargoFadeStartT) / (cargoFadeEndT - cargoFadeStartT);
+
+    const nBack = 9;
+    const nucleusPt = pointAtBack(nBack);
+    nucleusEl.setAttribute("cx", nucleusPt.x.toFixed(1));
+    nucleusEl.setAttribute("cy", nucleusPt.y.toFixed(1));
+    nucleusEl.setAttribute("opacity", cargoOpacity.toFixed(2));
+
+    // Two sperm cells trail a little further behind the nucleus, offset only
+    // slightly to each side of the curve. The sideways direction is the
+    // curve's own tangent rotated 90°, sampled locally, so it stays correct
+    // through the swipe's curvature instead of just legs 1/2/3's straight
+    // segments — and the offset is kept small enough to stay inside the
+    // tube's rendered width instead of poking out past its edges.
+    const sBack = nBack + 7;
+    const sidePerp = 1.6;
+    const sAnchor = pointAtBack(sBack);
+    const sAhead = pointAtBack(sBack - 1);
+    let tx = sAhead.x - sAnchor.x, ty = sAhead.y - sAnchor.y;
+    const tLen = Math.hypot(tx, ty) || 1;
+    tx /= tLen; ty /= tLen;
+    const px = -ty * sidePerp, py = tx * sidePerp; // perpendicular unit vector, scaled
+    sperm1El.setAttribute("cx", (sAnchor.x - px).toFixed(1));
+    sperm1El.setAttribute("cy", (sAnchor.y - py).toFixed(1));
+    sperm2El.setAttribute("cx", (sAnchor.x + px).toFixed(1));
+    sperm2El.setAttribute("cy", (sAnchor.y + py).toFixed(1));
+    sperm1El.setAttribute("opacity", (cargoOpacity * 0.9).toFixed(2));
+    sperm2El.setAttribute("opacity", (cargoOpacity * 0.9).toFixed(2));
   } else {
     nucleusEl.setAttribute("opacity", "0");
     sperm1El.setAttribute("opacity", "0");
@@ -1550,11 +1663,26 @@ function setMagnifier(on) {
     mag.setAttribute("opacity", "0");
     if (magAnimId) cancelAnimationFrame(magAnimId);
     setTimeout(() => { if (!state.magnifierOn) mag.style.display = "none"; }, 300);
+    // The leader line only ever gets its opacity updated by stepMagnifier's
+    // per-frame loop, which just got cancelled above — without this it would
+    // stay stuck at whatever it was (visible, if locked onto a tip) instead
+    // of disappearing along with the rest of the magnifier. Bypass its CSS
+    // transition too, so it snaps off instantly rather than visibly fading
+    // out over the next .35s after everything else has already gone.
+    lockedOrganKey = null;
+    magOrganMatch = null;
+    magMatchedPoint = null;
+    const leaderEl = document.getElementById("magLeaderLine");
+    leaderEl.style.transition = "none";
+    leaderEl.setAttribute("opacity", "0");
+    leaderEl.getBoundingClientRect(); // force reflow so the snap is applied now
+    leaderEl.style.transition = "";
+    document.getElementById("magLabelText").textContent = "";
   }
 }
 
 function setMagScale(delta) {
-  magScale = Math.max(0.5, Math.min(1.3, magScale + delta));
+  magScale = Math.max(0.4, Math.min(1.3, magScale + delta));
   clampMagPosition();
   positionMagnifier();
 }
@@ -1570,6 +1698,7 @@ function toPointIn(svgId, evt) {
 (function setupMagDrag() {
   const mag = document.getElementById("magnifier");
   mag.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("#magMicropyleMarker")) return; // let its click through instead of starting a drag
     magDragging = true;
     mag.classList.add("dragging");
     mag.setPointerCapture(e.pointerId);
@@ -1603,7 +1732,6 @@ document.getElementById("hoursSlider").addEventListener("input", (e) => {
 function stopPlay() {
   state.playing = false;
   if (playAnimId) cancelAnimationFrame(playAnimId);
-  document.getElementById("playBtn").innerHTML = `<svg class="mini-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`;
 }
 
 // Real-time pacing for the Play button, kept the same as the original
@@ -1619,15 +1747,6 @@ function playFrame(now) {
   if (state.hours >= MAX_HOURS) { stopPlay(); return; }
   playAnimId = requestAnimationFrame(playFrame);
 }
-
-document.getElementById("playBtn").addEventListener("click", () => {
-  if (state.playing) { stopPlay(); return; }
-  state.playing = true;
-  startHours = state.hours;
-  playStart = performance.now();
-  document.getElementById("playBtn").innerHTML = `<svg class="mini-icon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"></rect><rect x="14" y="5" width="4" height="14"></rect></svg>`;
-  playAnimId = requestAnimationFrame(playFrame);
-});
 
 /* =========================================================================
    POLLINATION ANIMATION
@@ -1765,16 +1884,9 @@ document.getElementById("pollinateBtn").addEventListener("click", (e) => {
     state.pollinated = true;
     state.hours = 0;
     document.getElementById("hoursSlider").value = 0;
-    // The synergids visibly begin releasing signal (the LURE/Ca²⁺ particle
-    // animation) as soon as the grain lands. This is illustrative only —
-    // it no longer affects how far either tube grows (both grow at the
-    // same rate) or whether the guided tube curves in (that's determined
-    // by which flower it is, not by this flag).
-    if (!state.chemRelease) {
-      state.chemRelease = true;
-      document.getElementById("releaseChemBtn").classList.add("chem-active");
-      startChemLoop();
-    }
+    // Chemical release is now a deliberate step the user takes via the 3rd
+    // button — it no longer auto-fires on pollination, since Germinate is
+    // gated on it having happened first.
     render();
   });
   const btn = e.currentTarget;
@@ -1785,9 +1897,16 @@ document.getElementById("pollinateBtn").addEventListener("click", (e) => {
 });
 
 document.getElementById("germinateBtn").addEventListener("click", (e) => {
-  if (!state.pollinated || state.germinated) return;
+  if (!state.pollinated || !state.chemRelease || state.germinated) return;
   state.germinated = true;
   startWaveLoop();
+  // Germination now starts the timeline playing on its own — no separate
+  // Play button. Dragging the hours slider still stops it (see the slider's
+  // input handler), which doubles as the pause control.
+  state.playing = true;
+  startHours = state.hours;
+  playStart = performance.now();
+  playAnimId = requestAnimationFrame(playFrame);
   render();
   const btn = e.currentTarget;
   btn.classList.remove("pulse");
@@ -1810,12 +1929,23 @@ document.getElementById("resetBtn").addEventListener("click", (e) => {
   lockedOrganKey = null;
   magOrganMatch = null;
   magMatchedPoint = null;
-  document.getElementById("magLeaderLine").setAttribute("opacity", "0");
+  // Bypass the leader line's CSS opacity transition so it vanishes instantly
+  // with everything else instead of visibly fading out over the next .35s.
+  const leaderEl = document.getElementById("magLeaderLine");
+  leaderEl.style.transition = "none";
+  leaderEl.setAttribute("opacity", "0");
+  leaderEl.getBoundingClientRect(); // force reflow so the snap is applied now
+  leaderEl.style.transition = "";
   document.getElementById("magLabelText").textContent = "";
   document.getElementById("expCard").classList.remove("ovule-detected");
   document.getElementById("tubeWaves").innerHTML = "";
   controlCalloutOpen = false;
   document.getElementById("controlEndCallout").setAttribute("opacity", "0");
+  micropyleCardOpen = false;
+  if (micropyleCardTimer) { clearTimeout(micropyleCardTimer); micropyleCardTimer = null; }
+  magMicropyleCardOpen = false;
+  if (magMicropyleCardTimer) { clearTimeout(magMicropyleCardTimer); magMicropyleCardTimer = null; }
+  document.getElementById("magMicropyleCallout").setAttribute("opacity", "0");
   // Stop and clear chemical particles
   state.chemRelease = false;
   stopChemLoop();
@@ -1833,6 +1963,7 @@ document.getElementById("releaseChemBtn").addEventListener("click", () => {
   state.chemRelease = !state.chemRelease;
   document.getElementById("releaseChemBtn").classList.toggle("chem-active", state.chemRelease);
   if (state.chemRelease) startChemLoop();
+  render();
 });
 
 document.getElementById("magBtn").addEventListener("click", () => setMagnifier(!state.magnifierOn));
